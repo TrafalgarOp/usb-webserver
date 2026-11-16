@@ -1,0 +1,6 @@
+/home/meyti/CLionProjects/usb-webserver/build/CMakeFiles/usb-webserver.dir
+/home/meyti/CLionProjects/usb-webserver/build/CMakeFiles/edit_cache.dir
+/home/meyti/CLionProjects/usb-webserver/build/CMakeFiles/rebuild_cache.dir
+/home/meyti/CLionProjects/usb-webserver/build/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+/home/meyti/CLionProjects/usb-webserver/build/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/meyti/CLionProjects/usb-webserver/build/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,9 @@
+# ninja log v5
+8	22	1794865182295653438	CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/audio/audio_device.c.o	aa5ddfc6454c3636
+2	28	1794865182301653325	CMakeFiles/usb-webserver.dir/Core/Src/sysmem.c.o	397bba372cba2dde
+2	46	1794865182320966687	CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_hal_msp.c.o	7b3a777211cd2817
+2	48	1794865182322352755	CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_it.c.o	66d26dfc9e7c19fc
+2	49	1794865182322652928	CMakeFiles/usb-webserver.dir/Core/Src/syscalls.c.o	acc9dabd58b2058f
+2	80	1794865182353652343	CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/tusb.c.o	e6aa58e343bcff6f
+3	82	1794865182355652305	CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/common/tusb_fifo.c.o	8b3322f1a66edc8
+5	96	1794865182368652060	CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/device/usbd.c.o	d2b999a9cd221005

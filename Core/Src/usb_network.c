@@ -1,0 +1,269 @@
+#include <stdio.h>
+#include <string.h>
+
+#include "tusb.h"
+#if CFG_TUD_NCM
+#include "class/net/ncm.h"
+#endif
+
+#include "dhserver.h"
+#include "httpd.h"
+#include "lwip/ethip6.h"
+#include "lwip/init.h"
+#include "lwip/prot/ethernet.h"
+#include "lwip/timeouts.h"
+#include "lwip/sys.h"
+
+#define INIT_IP4(a, b, c, d) \
+  { PP_HTONL(LWIP_MAKEU32(a, b, c, d)) }
+
+/* Blink pattern
+ * - 250 ms  : device not mounted
+ * - 1000 ms : device mounted
+ * - 2500 ms : device is suspended
+ */
+enum {
+  BLINK_NOT_MOUNTED = 250,
+  BLINK_MOUNTED = 1000,
+  BLINK_SUSPENDED = 2500,
+};
+
+static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+
+/* lwip context */
+static struct netif netif_data;
+
+/* this is used by this code, ./class/net/net_driver.c, and usb_descriptors.c */
+/* ideally speaking, this should be generated from the hardware's unique ID (if available) */
+/* it is suggested that the first byte is 0x02 to indicate a link-local address */
+uint8_t tud_network_mac_address[6] = {0x02, 0x02, 0x84, 0x6A, 0x96, 0x00};
+
+/* network parameters of this MCU */
+static const ip4_addr_t ipaddr = INIT_IP4(192, 168, 7, 1);
+static const ip4_addr_t netmask = INIT_IP4(255, 255, 255, 0);
+static const ip4_addr_t gateway = INIT_IP4(0, 0, 0, 0);
+
+/* database IP addresses that can be offered to the host; this must be in RAM to store assigned MAC addresses */
+static dhcp_entry_t entries[] = {
+    /* mac ip address               lease time */
+    {{0}, INIT_IP4(192, 168, 7, 2), 24 * 60 * 60},
+    {{0}, INIT_IP4(192, 168, 7, 3), 24 * 60 * 60},
+    {{0}, INIT_IP4(192, 168, 7, 4), 24 * 60 * 60},
+};
+
+static const dhcp_config_t dhcp_config = {
+    .router = INIT_IP4(0, 0, 0, 0),  /* router address (if any) */
+    .port = 67,                      /* listen port */
+    /* no dns server: the host may rank this link's DNS first and stall every lookup it cannot answer */
+    .dns = INIT_IP4(0, 0, 0, 0),
+    NULL,                            /* dns suffix */
+    TU_ARRAY_SIZE(entries),          /* num entry */
+    entries                          /* entries */
+};
+
+static err_t linkoutput_fn(struct netif *netif, struct pbuf *p) {
+  (void) netif;
+
+  /* a frame larger than the network class can carry would overflow the bulk-IN transfer, drop it */
+  if (p->tot_len > CFG_TUD_NET_MTU) {
+    return ERR_BUF;
+  }
+
+  for (;;) {
+    /* if TinyUSB isn't ready, we must signal back to lwip that there is nothing we can do */
+    if (!tud_ready())
+      return ERR_USE;
+
+    /* if the network driver can accept another packet, we make it happen */
+    if (tud_network_can_xmit(p->tot_len)) {
+      tud_network_xmit(p, 0 /* unused for this example */);
+      return ERR_OK;
+    }
+
+    /* transfer execution to TinyUSB in the hopes that it will finish transmitting the prior packet */
+    tud_task();
+  }
+}
+
+static err_t ip4_output_fn(struct netif *netif, struct pbuf *p, const ip4_addr_t *addr) {
+  return etharp_output(netif, p, addr);
+}
+
+#if LWIP_IPV6
+static err_t ip6_output_fn(struct netif *netif, struct pbuf *p, const ip6_addr_t *addr) {
+  return ethip6_output(netif, p, addr);
+}
+#endif
+
+static err_t netif_init_cb(struct netif *netif) {
+  LWIP_ASSERT("netif != NULL", (netif != NULL));
+  netif->mtu = CFG_TUD_NET_MTU - SIZEOF_ETH_HDR; // lwIP mtu bounds the IP packet, CFG_TUD_NET_MTU the Ethernet frame
+  netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
+  netif->state = NULL;
+  netif->name[0] = 'E';
+  netif->name[1] = 'X';
+  netif->linkoutput = linkoutput_fn;
+  netif->output = ip4_output_fn;
+#if LWIP_IPV6
+  netif->output_ip6 = ip6_output_fn;
+#endif
+  return ERR_OK;
+}
+
+/* notifies the USB host about the link state change. */
+static void usbnet_netif_link_callback(struct netif *netif) {
+    bool link_up = netif_is_link_up(netif);
+    tud_network_link_state(0, link_up);
+}
+
+// Zero-copy reception: a received frame is handed to lwIP in place, as a PBUF_REF pbuf pointing into the NCM receive
+// buffer, which the class keeps until lwIP frees the pbuf. A frame the class cannot hold, or beyond this pool, is
+// copied into a PBUF_POOL pbuf instead.
+// Not on MCUs whose USB buffer memory faults on unaligned access (TUP_MCU_STRICT_ALIGN, e.g. the LPC55 high-speed
+// port's USB RAM): the frames' IP header fields are often not word aligned, and lwIP's packed header reads may compile
+// to unaligned word loads.
+#if CFG_TUD_NCM && LWIP_HIGH_THROUGHPUT && !TUP_MCU_STRICT_ALIGN
+// One pbuf per held frame: every receive NTB can hold frames at once, each up to the datagram count the device
+// advertises to the host per NTB.
+#define RX_PBUF_N (CFG_TUD_NCM_OUT_NTB_N * CFG_TUD_NCM_OUT_MAX_DATAGRAMS_PER_NTB)
+TU_VERIFY_STATIC(RX_PBUF_N <= UINT8_MAX, "rx_pbuf_free_count is 8-bit");
+
+typedef struct {
+  struct pbuf_custom pc; // first: lwIP frees it through its struct pbuf
+  void *ntb;
+} rx_pbuf_t;
+
+static rx_pbuf_t rx_pbuf[RX_PBUF_N];
+static rx_pbuf_t *rx_pbuf_free[RX_PBUF_N];
+static uint8_t rx_pbuf_free_count;
+
+static void rx_pbuf_init(void) {
+  for (uint8_t i = 0; i < RX_PBUF_N; i++) {
+    rx_pbuf_free[i] = &rx_pbuf[i];
+  }
+  rx_pbuf_free_count = RX_PBUF_N;
+}
+
+static void rx_pbuf_release(struct pbuf *p) {
+  rx_pbuf_t *rp = (rx_pbuf_t *) p;
+  tud_network_recv_release(rp->ntb);
+  rx_pbuf_free[rx_pbuf_free_count++] = rp;
+}
+
+// a pbuf referencing the frame in place, or NULL when it must be copied
+static struct pbuf *rx_pbuf_in_place(const uint8_t *src, uint16_t size) {
+  if (rx_pbuf_free_count == 0) {
+    return NULL;
+  }
+  void *ntb = tud_network_recv_hold();
+  if (ntb == NULL) {
+    return NULL;
+  }
+  rx_pbuf_t *rp = rx_pbuf_free[--rx_pbuf_free_count];
+  rp->ntb = ntb;
+  rp->pc.custom_free_function = rx_pbuf_release;
+  return pbuf_alloced_custom(PBUF_RAW, size, PBUF_REF, &rp->pc, (void *) (uintptr_t) src, size);
+}
+#else
+static void rx_pbuf_init(void) {}
+
+static struct pbuf *rx_pbuf_in_place(const uint8_t *src, uint16_t size) {
+  (void) src;
+  (void) size;
+  return NULL;
+}
+#endif
+
+void usb_network_init(void) {
+  struct netif *netif = &netif_data;
+
+  lwip_init();
+  rx_pbuf_init();
+
+  /* the lwip virtual MAC address must be different from the host's; to ensure this, we toggle the LSbit */
+  netif->hwaddr_len = sizeof(tud_network_mac_address);
+  memcpy(netif->hwaddr, tud_network_mac_address, sizeof(tud_network_mac_address));
+  netif->hwaddr[5] ^= 0x01;
+
+  netif = netif_add(netif, &ipaddr, &netmask, &gateway, NULL, netif_init_cb, ethernet_input);
+#if LWIP_IPV6
+  netif_create_ip6_linklocal_address(netif, 1);
+#endif
+  netif_set_default(netif);
+
+#if LWIP_NETIF_LINK_CALLBACK
+  // Set the link callback to notify USB host about link state changes
+  netif_set_link_callback(netif, usbnet_netif_link_callback);
+  netif_set_link_up(netif);
+#else
+  tud_network_link_state(0, true);
+#endif
+}
+
+
+bool tud_network_recv_cb(const uint8_t *src, uint16_t size) {
+  struct netif *netif = &netif_data;
+
+  if (size) {
+    struct pbuf *p = rx_pbuf_in_place(src, size);
+
+    if (p == NULL) {
+      p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
+      if (p == NULL) {
+        printf("ERROR: Failed to allocate pbuf of size %d\n", size);
+        return false;
+      }
+
+      /* Copy buf to pbuf */
+      pbuf_take(p, src, size);
+    }
+
+    // Surrender ownership of our pbuf unless there was an error
+    // Only call pbuf_free if not Ok else it will panic with "pbuf_free: p->ref > 0"
+    // or steal it from whatever took ownership of it with undefined consequences.
+    // See: https://savannah.nongnu.org/patch/index.php?10121
+    if (netif->input(p, netif) != ERR_OK) {
+      printf("ERROR: netif input failed\n");
+      pbuf_free(p);
+    }
+  }
+
+  // Signal tinyusb that the current frame has been processed. An empty frame (a ZLP, or an RNDIS packet that failed
+  // validation) must be renewed too: returning true without it leaves OUT un-armed and stalls the link.
+  tud_network_recv_renew();
+  return true;
+}
+
+uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg) {
+  struct pbuf *p = (struct pbuf *) ref;
+
+  (void) arg; /* unused for this example */
+
+  return pbuf_copy_partial(p, dst, p->tot_len, 0);
+}
+
+void usb_network_services_init(void)
+{
+    while (!netif_is_up(&netif_data)) {
+    }
+
+    while (dhserv_init(&dhcp_config) != ERR_OK) {
+    }
+
+    httpd_init();
+}
+
+sys_prot_t sys_arch_protect(void)
+{
+  return 0;
+}
+
+void sys_arch_unprotect(sys_prot_t pval)
+{
+  (void)pval;
+}
+
+uint32_t sys_now(void)
+{
+  return tusb_time_millis_api();
+}

@@ -1,0 +1,296 @@
+[
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/Core/Src/main.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/main.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/main.c",
+  "output": "CMakeFiles/usb-webserver.dir/Core/Src/main.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_it.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/stm32f4xx_it.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/stm32f4xx_it.c",
+  "output": "CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_it.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_hal_msp.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/stm32f4xx_hal_msp.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/stm32f4xx_hal_msp.c",
+  "output": "CMakeFiles/usb-webserver.dir/Core/Src/stm32f4xx_hal_msp.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/Core/Src/sysmem.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/sysmem.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/sysmem.c",
+  "output": "CMakeFiles/usb-webserver.dir/Core/Src/sysmem.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/Core/Src/syscalls.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/syscalls.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/syscalls.c",
+  "output": "CMakeFiles/usb-webserver.dir/Core/Src/syscalls.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -o CMakeFiles/usb-webserver.dir/startup_stm32f411xe.s.o -c /home/meyti/CLionProjects/usb-webserver/startup_stm32f411xe.s",
+  "file": "/home/meyti/CLionProjects/usb-webserver/startup_stm32f411xe.s",
+  "output": "CMakeFiles/usb-webserver.dir/startup_stm32f411xe.s.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/tusb.c.o -c /home/meyti/Projects/tinyusb/src/tusb.c",
+  "file": "/home/meyti/Projects/tinyusb/src/tusb.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/tusb.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/common/tusb_fifo.c.o -c /home/meyti/Projects/tinyusb/src/common/tusb_fifo.c",
+  "file": "/home/meyti/Projects/tinyusb/src/common/tusb_fifo.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/common/tusb_fifo.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/device/usbd.c.o -c /home/meyti/Projects/tinyusb/src/device/usbd.c",
+  "file": "/home/meyti/Projects/tinyusb/src/device/usbd.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/device/usbd.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/audio/audio_device.c.o -c /home/meyti/Projects/tinyusb/src/class/audio/audio_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/audio/audio_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/audio/audio_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/cdc/cdc_device.c.o -c /home/meyti/Projects/tinyusb/src/class/cdc/cdc_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/cdc/cdc_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/cdc/cdc_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/dfu/dfu_device.c.o -c /home/meyti/Projects/tinyusb/src/class/dfu/dfu_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/dfu/dfu_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/dfu/dfu_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/dfu/dfu_rt_device.c.o -c /home/meyti/Projects/tinyusb/src/class/dfu/dfu_rt_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/dfu/dfu_rt_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/dfu/dfu_rt_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/hid/hid_device.c.o -c /home/meyti/Projects/tinyusb/src/class/hid/hid_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/hid/hid_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/hid/hid_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi_device.c.o -c /home/meyti/Projects/tinyusb/src/class/midi/midi_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/midi/midi_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi2_device.c.o -c /home/meyti/Projects/tinyusb/src/class/midi/midi2_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/midi/midi2_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi2_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/msc/msc_device.c.o -c /home/meyti/Projects/tinyusb/src/class/msc/msc_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/msc/msc_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/msc/msc_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/mtp/mtp_device.c.o -c /home/meyti/Projects/tinyusb/src/class/mtp/mtp_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/mtp/mtp_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/mtp/mtp_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/net/ecm_rndis_device.c.o -c /home/meyti/Projects/tinyusb/src/class/net/ecm_rndis_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/net/ecm_rndis_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/net/ecm_rndis_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/net/ncm_device.c.o -c /home/meyti/Projects/tinyusb/src/class/net/ncm_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/net/ncm_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/net/ncm_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/printer/printer_device.c.o -c /home/meyti/Projects/tinyusb/src/class/printer/printer_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/printer/printer_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/printer/printer_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/usbtmc/usbtmc_device.c.o -c /home/meyti/Projects/tinyusb/src/class/usbtmc/usbtmc_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/usbtmc/usbtmc_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/usbtmc/usbtmc_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/vendor/vendor_device.c.o -c /home/meyti/Projects/tinyusb/src/class/vendor/vendor_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/vendor/vendor_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/vendor/vendor_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/video/video_device.c.o -c /home/meyti/Projects/tinyusb/src/class/video/video_device.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/video/video_device.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/video/video_device.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/host/usbh.c.o -c /home/meyti/Projects/tinyusb/src/host/usbh.c",
+  "file": "/home/meyti/Projects/tinyusb/src/host/usbh.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/host/usbh.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/host/hub.c.o -c /home/meyti/Projects/tinyusb/src/host/hub.c",
+  "file": "/home/meyti/Projects/tinyusb/src/host/hub.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/host/hub.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/cdc/cdc_host.c.o -c /home/meyti/Projects/tinyusb/src/class/cdc/cdc_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/cdc/cdc_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/cdc/cdc_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/audio/audio_host.c.o -c /home/meyti/Projects/tinyusb/src/class/audio/audio_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/audio/audio_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/audio/audio_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/hid/hid_host.c.o -c /home/meyti/Projects/tinyusb/src/class/hid/hid_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/hid/hid_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/hid/hid_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi_host.c.o -c /home/meyti/Projects/tinyusb/src/class/midi/midi_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/midi/midi_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi2_host.c.o -c /home/meyti/Projects/tinyusb/src/class/midi/midi2_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/midi/midi2_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/midi/midi2_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/msc/msc_host.c.o -c /home/meyti/Projects/tinyusb/src/class/msc/msc_host.c",
+  "file": "/home/meyti/Projects/tinyusb/src/class/msc/msc_host.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/class/msc/msc_host.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/typec/usbc.c.o -c /home/meyti/Projects/tinyusb/src/typec/usbc.c",
+  "file": "/home/meyti/Projects/tinyusb/src/typec/usbc.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/typec/usbc.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c.o -c /home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c",
+  "file": "/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DCFG_TUSB_MCU=OPT_MCU_STM32F4 -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/Projects/tinyusb/src -I/home/meyti/Projects/tinyusb/src/../lib/networking -I/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2 -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dwc2_common.c.o -c /home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dwc2_common.c",
+  "file": "/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dwc2_common.c",
+  "output": "CMakeFiles/usb-webserver.dir/home/meyti/Projects/tinyusb/src/portable/synopsys/dwc2/dwc2_common.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32f4xx.c.o -c /home/meyti/CLionProjects/usb-webserver/Core/Src/system_stm32f4xx.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Core/Src/system_stm32f4xx.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Core/Src/system_stm32f4xx.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c.o"
+},
+{
+  "directory": "/home/meyti/CLionProjects/usb-webserver/build",
+  "command": "/usr/bin/cc -DDEBUG -DSTM32F411xE -DUSE_HAL_DRIVER -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Core/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I/home/meyti/CLionProjects/usb-webserver/cmake/stm32cubemx/../../Drivers/CMSIS/Include -g -std=gnu11 -o cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c.o -c /home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c",
+  "file": "/home/meyti/CLionProjects/usb-webserver/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c",
+  "output": "cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir/__/__/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c.o"
+}
+]
