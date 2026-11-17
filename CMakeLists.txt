@@ -97,6 +97,69 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 # lwIP
 set(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/lwip")
 
+# Host-side lwIP HTML filesystem generator
+find_program(HOST_CC gcc REQUIRED)
+
+set(MAKEFSDATA_SOURCE
+        "${LWIP_DIR}/src/apps/http/makefsdata/makefsdata.c"
+)
+
+set(MAKEFSDATA_EXECUTABLE
+        "${CMAKE_CURRENT_BINARY_DIR}/host-tools/makefsdata"
+)
+
+add_custom_command(
+        OUTPUT "${MAKEFSDATA_EXECUTABLE}"
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/host-tools"
+
+        COMMAND "${HOST_CC}"
+        "-I${CMAKE_CURRENT_SOURCE_DIR}/tools/makefsdata"
+        "-I${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc"
+        "-I${LWIP_DIR}/src/include"
+        "-I${LWIP_DIR}/src/apps/http"
+        "${MAKEFSDATA_SOURCE}"
+        -o "${MAKEFSDATA_EXECUTABLE}"
+
+        DEPENDS
+        "${MAKEFSDATA_SOURCE}"
+        "${LWIP_DIR}/src/apps/http/makefsdata/tinydir.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/makefsdata/lwipopts.h"
+
+        VERBATIM
+)
+
+# Website source files
+file(GLOB_RECURSE WEB_FILES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/*"
+)
+
+set(GENERATED_FSDATA
+        "${CMAKE_CURRENT_SOURCE_DIR}/fsdata_custom.c"
+)
+
+add_custom_command(
+        OUTPUT "${GENERATED_FSDATA}"
+
+        COMMAND "${MAKEFSDATA_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/web"
+        "-f:${GENERATED_FSDATA}"
+
+        DEPENDS
+        "${MAKEFSDATA_EXECUTABLE}"
+        ${WEB_FILES}
+
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        VERBATIM
+)
+
+add_custom_target(generate_web_fs
+        DEPENDS "${GENERATED_FSDATA}"
+)
+
+add_dependencies(${CMAKE_PROJECT_NAME} generate_web_fs)
+
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${LWIP_DIR}/src/include"
