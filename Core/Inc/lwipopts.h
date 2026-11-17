@@ -93,7 +93,7 @@
 #define LWIP_SINGLE_NETIF               1
 #define LWIP_NETIF_LINK_CALLBACK        1
 
-#define HTTPD_USE_CUSTOM_FSDATA         0
+#define HTTPD_USE_CUSTOM_FSDATA         1
 
 #define LWIP_MULTICAST_PING             1
 #define LWIP_BROADCAST_PING             1

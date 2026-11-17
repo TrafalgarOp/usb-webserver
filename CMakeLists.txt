@@ -98,6 +98,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 set(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/lwip")
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
         "${LWIP_DIR}/src/include"
         "${LWIP_DIR}/src/include/ipv4"
         "${LWIP_DIR}/src/include/lwip/apps"
