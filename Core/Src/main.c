@@ -104,6 +104,35 @@ static void MX_TinyUSB_Init(void)
   tusb_init(0, &dev_init);
 }
 
+static void LED_Status_Task(void)
+{
+  static uint32_t last_blink = 0;
+  static bool led_state = false;
+
+  uint32_t interval;
+
+  if (tud_suspended()) {
+    interval = 2500;
+  }
+  else if (tud_mounted()) {
+    interval = 1000;
+  }
+  else {
+    interval = 250;
+  }
+
+  if (HAL_GetTick() - last_blink >= interval) {
+    last_blink = HAL_GetTick();
+    led_state = !led_state;
+
+    HAL_GPIO_WritePin(
+        GPIOC,
+        GPIO_PIN_13,
+        led_state ? GPIO_PIN_RESET : GPIO_PIN_SET
+    );
+  }
+}
+
 // TinyUSB uses this function for its millisecond time source.
 // CubeMX already maintains the HAL tick through SysTick.
 uint32_t tusb_time_millis_api(void)
@@ -155,11 +184,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    HAL_Delay(500);
-
     tud_task();
     sys_check_timeouts();
+    LED_Status_Task();
   }
   /* USER CODE END 3 */
 }
@@ -167,7 +194,9 @@ int main(void)
 /**
   * @brief System Clock Configuration
   * @retval None
-  */
+  *
+  *
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};

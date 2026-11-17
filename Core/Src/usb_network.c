@@ -244,13 +244,15 @@ uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg) {
 
 void usb_network_services_init(void)
 {
-    while (!netif_is_up(&netif_data)) {
-    }
+  err_t err = dhserv_init(&dhcp_config);
 
-    while (dhserv_init(&dhcp_config) != ERR_OK) {
-    }
+  if (err != ERR_OK)
+  {
+    printf("ERROR: DHCP server initialization failed: %d\n", err);
+    return;
+  }
 
-    httpd_init();
+  httpd_init();
 }
 
 sys_prot_t sys_arch_protect(void)

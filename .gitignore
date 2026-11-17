@@ -1,0 +1,21 @@
+# Build output
+/build/
+/cmake-build-*/
+
+# CLion / IntelliJ personal settings
+.idea/
+
+# Temporary files and backups
+*.backup
+*.bak
+*~
+
+# Compiled output
+*.o
+*.obj
+*.elf
+*.hex
+*.bin
+*.map
+*.list
+*.a

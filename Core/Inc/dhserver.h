@@ -44,6 +44,15 @@ typedef struct dhcp_entry
 	uint8_t    mac[6];
 	ip4_addr_t addr;
 	uint32_t   lease;
+	uint32_t   lease_started;
+
+
+	uint8_t    offered_mac[6];
+	uint32_t   offer_started;
+	bool       offered;
+
+	uint32_t   quarantine_started;
+	bool       quarantined;
 } dhcp_entry_t;
 
 typedef struct dhcp_config

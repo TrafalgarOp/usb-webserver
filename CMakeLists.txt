@@ -70,11 +70,16 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 )
 
 # TinyUSB
-set(TINYUSB_DIR "$ENV{HOME}/Projects/tinyusb")
+set(TINYUSB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/tinyusb")
 
 include(${TINYUSB_DIR}/src/CMakeLists.txt)
 
 tinyusb_target_add(${CMAKE_PROJECT_NAME})
+
+# Give project headers priority over TinyUSB headers
+target_include_directories(${CMAKE_PROJECT_NAME} BEFORE PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc"
+)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         ${TINYUSB_DIR}/src/portable/synopsys/dwc2/dcd_dwc2.c
@@ -90,7 +95,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 # lwIP
-set(LWIP_DIR "${TINYUSB_DIR}/lib/lwip")
+set(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/lwip")
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         "${LWIP_DIR}/src/include"
@@ -138,5 +143,5 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         "${LWIP_DIR}/src/apps/http/fs.c"
 
         # DHCP server
-        "${TINYUSB_DIR}/lib/networking/dhserver.c"
+        "Core/Src/dhserver.c"
 )

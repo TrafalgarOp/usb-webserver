@@ -23,6 +23,8 @@
  */
 
 #include "dhserver.h"
+#include <stddef.h>
+#include "lwip/sys.h"
 
 /* DHCP message type */
 #define DHCP_DISCOVER       1
@@ -33,6 +35,8 @@
 #define DHCP_NAK            6
 #define DHCP_RELEASE        7
 #define DHCP_INFORM         8
+#define DHCP_QUARANTINE_MS  (10U * 60U * 1000U)
+#define DHCP_OFFER_TIMEOUT_MS (60U * 1000U)
 
 /* DHCP options */
 enum DHCP_OPTIONS
@@ -126,37 +130,150 @@ static dhcp_entry_t *entry_by_mac(uint8_t *mac)
 	return NULL;
 }
 
+static dhcp_entry_t *entry_by_offer_mac(const uint8_t *mac)
+{
+	for (int i = 0; i < config->num_entry; i++)
+		if (config->entries[i].offered &&
+			memcmp(config->entries[i].offered_mac, mac, 6) == 0)
+			return &config->entries[i];
+
+	return NULL;
+}
+
 static __inline bool is_vacant(dhcp_entry_t *entry)
 {
 	return memcmp("\0\0\0\0\0", entry->mac, 6) == 0;
 }
 
-static dhcp_entry_t *vacant_address(void)
-{
-	int i;
-	for (i = 0; i < config->num_entry; i++)
-		if (is_vacant(config->entries + i))
+static dhcp_entry_t *vacant_address(void) {
+	for (int i = 0; i < config->num_entry; i++)
+		if (is_vacant(config->entries + i)
+			&& !config->entries[i].quarantined
+			&&!config->entries[i].offered)
 			return config->entries + i;
 	return NULL;
 }
 
 static __inline void free_entry(dhcp_entry_t *entry)
 {
-	memset(entry->mac, 0, 6);
+	memset(entry->mac, 0, sizeof(entry->mac));
+	entry->lease_started = 0;
+
+	memset(entry->offered_mac, 0, sizeof(entry->offered_mac));
+	entry->offer_started = 0;
+	entry->offered = false;
 }
 
-static uint8_t *find_dhcp_option(uint8_t *attrs, int size, uint8_t attr)
+static void expire_leases(void)
 {
-	int i = 0;
-	while ((i + 1) < size)
+	uint32_t now = sys_now();
+
+	for (int i = 0; i < config->num_entry; i++)
 	{
-		int next = i + attrs[i + 1] + 2;
-		if (next > size) return NULL;
-		if (attrs[i] == attr)
+		dhcp_entry_t *entry = &config->entries[i];
+
+		/* Expire quarantined addresses */
+		if (entry->quarantined && now - entry->quarantine_started >= DHCP_QUARANTINE_MS)
+		{
+			entry->quarantined = false;
+			entry->quarantine_started = 0;
+		}
+
+		/* Expire pending DHCP offers */
+		if (entry->offered &&
+			(uint32_t)(now - entry->offer_started) >= DHCP_OFFER_TIMEOUT_MS)
+		{
+			entry->offered = false;
+			entry->offer_started = 0;
+			memset(entry->offered_mac, 0, sizeof(entry->offered_mac));
+		}
+
+		/* Expire normal DHCP leases */
+		if (!is_vacant(entry) && now - entry->lease_started >= entry->lease * 1000U)
+			free_entry(entry);
+	}
+}
+
+static uint8_t *find_dhcp_option(uint8_t *attrs, int size, uint8_t attr) {
+	int i = 0;
+
+	while (i < size) {
+		uint8_t option = attrs[i];
+
+		// PAD: one-byte option with no length field
+		if (option == DHCP_PAD) {
+			i++;
+			continue;
+		}
+		if (option == DHCP_END) // END: no more options
+			return NULL;
+		if (i + 1 >= size) // Every other option requires a length byte
+			return NULL;
+
+		uint8_t option_length = attrs[i + 1];
+
+		// Check that the complete option fits in the buffer
+		if (option_length > size - i - 2)
+			return NULL;
+		if (option == attr)
 			return attrs + i;
-		i = next;
+
+		i += option_length + 2;
 	}
 	return NULL;
+}
+
+static bool validate_dhcp_options(const uint8_t *attrs, int size)
+{
+	int i = 0;
+	int message_type_count = 0;
+	int requested_ip_count = 0;
+	int server_id_count = 0;
+
+	while (i < size)
+	{
+		uint8_t option = attrs[i];
+
+		if (option == DHCP_PAD)
+		{
+			i++;
+			continue;
+		}
+
+		if (option == DHCP_END)
+			return true;
+
+		if (i + 1 >= size)
+			return false;
+
+		uint8_t len = attrs[i + 1];
+
+		if (len > size - i - 2)
+			return false;
+
+		switch (option)
+		{
+			case DHCP_MESSAGETYPE:
+				if (++message_type_count > 1 || len != 1)
+					return false;
+				break;
+
+			case DHCP_IPADDRESS:
+				if (++requested_ip_count > 1 || len != 4)
+					return false;
+				break;
+
+			case DHCP_SERVERID:
+				if (++server_id_count > 1 || len != 4)
+					return false;
+				break;
+		}
+
+		i += len + 2;
+	}
+
+	/* A valid DHCP option list must terminate with END */
+	return false;
 }
 
 static int fill_options(void *dest,
@@ -227,6 +344,70 @@ static int fill_options(void *dest,
 	return ptr - (uint8_t *)dest;
 }
 
+static int fill_inform_options(
+		void *dest,
+		const char *domain,
+		ip4_addr_t serverid,
+		ip4_addr_t router,
+		ip4_addr_t subnet,
+		ip4_addr_t dns)
+{
+	uint8_t *ptr = (uint8_t *)dest;
+
+	/* DHCP message type: ACK */
+	*ptr++ = DHCP_MESSAGETYPE;
+	*ptr++ = 1;
+	*ptr++ = DHCP_ACK;
+
+	/* DHCP server identifier */
+	*ptr++ = DHCP_SERVERID;
+	*ptr++ = 4;
+	set_ip(ptr, serverid);
+	ptr += 4;
+
+	/* Subnet mask */
+	*ptr++ = DHCP_SUBNETMASK;
+	*ptr++ = 4;
+	set_ip(ptr, subnet);
+	ptr += 4;
+
+	/* Router */
+	if (router.addr != 0)
+	{
+		*ptr++ = DHCP_ROUTER;
+		*ptr++ = 4;
+		set_ip(ptr, router);
+		ptr += 4;
+	}
+
+	/* Domain name */
+	if (domain != NULL)
+	{
+		int len = strlen(domain);
+
+		if (len > 255)
+			len = 255;
+
+		*ptr++ = DHCP_DNSDOMAIN;
+		*ptr++ = (uint8_t)len;
+		memcpy(ptr, domain, len);
+		ptr += len;
+	}
+
+	/* DNS server */
+	if (dns.addr != 0)
+	{
+		*ptr++ = DHCP_DNSSERVER;
+		*ptr++ = 4;
+		set_ip(ptr, dns);
+		ptr += 4;
+	}
+
+	/* End */
+	*ptr++ = DHCP_END;
+
+	return (int)(ptr - (uint8_t *)dest);
+}
 
 /*
  * RFC 2131 Section 4.1 compliant destination address selection
@@ -248,9 +429,13 @@ static ip_addr_t get_dhcp_destination(struct netif *netif, const DHCP_TYPE *dhcp
     }
 
     if (is_nak) {
-        // RFC 2131: "In all cases, when 'giaddr' is zero,
+        //  RFC 2131: "In all cases, when 'giaddr' is zero,
         // the server broadcasts any DHCPNAK messages to 0xffffffff"
-        goto dest_broadcast;
+        // goto dest_broadcast;
+
+        /* DHCPNAK must use the limited broadcast address */
+        ip_addr_set_ip4_u32(&dest_addr, 0xFFFFFFFFUL);
+        return dest_addr;
     }
 
     if (!ciaddr_zero) {
@@ -283,108 +468,459 @@ dest_broadcast:
 
 }
 
+static void send_nak(struct netif *netif, struct udp_pcb *upcb, u16_t port)
+{
+	struct pbuf *pp;
+	ip_addr_t dest_addr;
+
+	/* Prepare BOOTP reply */
+	dhcp_data.dp_op = 2;
+	dhcp_data.dp_secs = 0;
+	memset(dhcp_data.dp_yiaddr, 0, 4);
+	memset(dhcp_data.dp_ciaddr, 0, 4);
+	memcpy(dhcp_data.dp_magic, magic_cookie, 4);
+
+	/* DHCP message type: NAK */
+	memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
+
+	ptrdiff_t pos = 0;
+	uint8_t *opt = dhcp_data.dp_options;
+
+	opt[pos++] = DHCP_MESSAGETYPE;
+	opt[pos++] = 1;
+	opt[pos++] = DHCP_NAK;
+
+	opt[pos++] = DHCP_SERVERID;
+	opt[pos++] = 4;
+	set_ip(&opt[pos], *netif_ip4_addr(netif));
+	pos += 4;
+
+	opt[pos] = DHCP_END;
+
+	pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
+	if (pp == NULL)
+		return;
+
+	memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
+
+	dest_addr = get_dhcp_destination(netif, &dhcp_data, NULL, true);
+
+	udp_sendto(upcb, pp, &dest_addr, port);
+
+	pbuf_free(pp);
+}
+
 static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
 	uint8_t *ptr;
 	dhcp_entry_t *entry;
+	dhcp_entry_t *old_entry;
 	struct pbuf *pp;
-	struct netif *netif = netif_get_by_index(p->if_idx);
+	struct netif *netif;
 	ip_addr_t dest_addr;
+	ip4_addr_t requested_ip;
+
+	u16_t packet_len;
+	u16_t header_len = (u16_t)offsetof(DHCP_TYPE, dp_options);
+	u16_t options_len;
 
 	(void)arg;
 	(void)addr;
 
-	unsigned n = p->len;
-	if (n > sizeof(dhcp_data)) n = sizeof(dhcp_data);
-	memcpy(&dhcp_data, p->payload, n);
+	if (p == NULL)
+		return;
 
-	ptr = find_dhcp_option(dhcp_data.dp_options, sizeof(dhcp_data.dp_options), DHCP_MESSAGETYPE);
+	packet_len = p->tot_len;
+
+	// A DHCP packet must contain the fixed header and message type option.
+	if (packet_len < header_len + 3 || packet_len > sizeof(dhcp_data))
+	{
+		pbuf_free(p);
+		return;
+	}
+
+	// Copy the complete packet, including any additional pbuf segments.
+	memset(&dhcp_data, 0, sizeof(dhcp_data));
+
+	if (pbuf_copy_partial(p, &dhcp_data, packet_len, 0) != packet_len)
+	{
+		pbuf_free(p);
+		return;
+	}
+
+	options_len = packet_len - header_len;
+
+	/* Validate the incoming BOOTP/DHCP request */
+	if (dhcp_data.dp_op != 1 ||       /* BOOTREQUEST */
+		dhcp_data.dp_htype != 1 ||    /* Ethernet */
+		dhcp_data.dp_hlen != 6 ||     /* MAC address length */
+		memcmp(dhcp_data.dp_magic, magic_cookie, sizeof(magic_cookie)) != 0)
+	{
+		pbuf_free(p);
+		return;
+	}
+
+	netif = netif_get_by_index(p->if_idx);
+
+	if (netif == NULL)
+	{
+		pbuf_free(p);
+		return;
+	}
+
+	/* Release expired DHCP leases */
+	expire_leases();
+
+	if (!validate_dhcp_options(dhcp_data.dp_options, options_len))
+	{
+		pbuf_free(p);
+		return;
+	}
+	ptr = find_dhcp_option(
+		dhcp_data.dp_options,
+		options_len,
+		DHCP_MESSAGETYPE
+	);
+
 	if (ptr == NULL)
 	{
 		pbuf_free(p);
 		return;
 	}
 
-	switch (ptr[2])
+	/* DHCP message type must contain exactly one byte */
+	if (ptr[1] != 1)
 	{
+		pbuf_free(p);
+		return;
+	}
+
+	switch (ptr[2]) {
+
 		case DHCP_DISCOVER:
+			/* Reuse an existing lease or pending offer */
 			entry = entry_by_mac(dhcp_data.dp_chaddr);
-			if (entry == NULL) entry = vacant_address();
-			if (entry == NULL) break;
-			dhcp_data.dp_op = 2; /* reply */
+
+			if (entry == NULL)
+				entry = entry_by_offer_mac(dhcp_data.dp_chaddr);
+
+			/* Otherwise select a new available address */
+			if (entry == NULL)
+				entry = vacant_address();
+
+			if (entry == NULL)
+				break;
+
+			dhcp_data.dp_op = 2;
 			dhcp_data.dp_secs = 0;
-			dhcp_data.dp_flags = 0;
 			set_ip(dhcp_data.dp_yiaddr, entry->addr);
 			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
 
-			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
+			memset(dhcp_data.dp_options, 0,
+			       sizeof(dhcp_data.dp_options));
 
-			fill_options(dhcp_data.dp_options,
+			fill_options(
+				dhcp_data.dp_options,
 				DHCP_OFFER,
 				config->domain,
 				config->dns,
 				entry->lease,
 				*netif_ip4_addr(netif),
 				config->router,
-				*netif_ip4_netmask(netif));
+				*netif_ip4_netmask(netif)
+			);
 
-			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
-			if (pp == NULL) break;
+			pp = pbuf_alloc(
+				PBUF_TRANSPORT,
+				sizeof(dhcp_data),
+				PBUF_POOL
+			);
+
+			if (pp == NULL)
+				break;
+
 			memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
-			// RFC 2131 compliant destination selection for DHCP OFFER
-			dest_addr = get_dhcp_destination(netif, &dhcp_data, &entry->addr, false);
-			udp_sendto(upcb, pp, &dest_addr, port);
+
+			dest_addr = get_dhcp_destination(
+				netif,
+				&dhcp_data,
+				&entry->addr,
+				false
+			);
+
+			/* Reserve the address only if the OFFER was sent */
+			if (udp_sendto(upcb, pp, &dest_addr, port) == ERR_OK) {
+				if (is_vacant(entry)) {
+					memcpy(entry->offered_mac,
+					       dhcp_data.dp_chaddr, 6);
+
+					entry->offered = true;
+					entry->offer_started = sys_now();
+				}
+			}
+
 			pbuf_free(pp);
 			break;
 
-		case DHCP_REQUEST:
-			/* 1. find requested ipaddr in option list */
-			ptr = find_dhcp_option(dhcp_data.dp_options, sizeof(dhcp_data.dp_options), DHCP_IPADDRESS);
-			if (ptr == NULL) break;
-			if (ptr[1] != 4) break;
-			ptr += 2;
+		case DHCP_REQUEST: {
+			/* Ignore DHCPREQUEST messages selecting another DHCP server */
+			ptr = find_dhcp_option(
+				dhcp_data.dp_options,
+				options_len,
+				DHCP_SERVERID
+			);
 
-			/* 2. does hw-address registered? */
-			entry = entry_by_mac(dhcp_data.dp_chaddr);
-			if (entry != NULL) free_entry(entry);
+			if (ptr != NULL) {
+				if (ptr[1] != 4)
+					break;
 
-			/* 3. find requested ipaddr */
-			entry = entry_by_ip(get_ip(ptr));
-			if (entry == NULL) break;
-			if (!is_vacant(entry)) break;
+				if (memcmp(ptr + 2, netif_ip4_addr(netif), 4) != 0)
+					break;
+			}
 
-			/* 4. fill struct fields */
-			memcpy(dhcp_data.dp_yiaddr, ptr, 4);
-			dhcp_data.dp_op = 2; /* reply */
+			/* 1. Find the client's existing lease */
+			old_entry = entry_by_mac(dhcp_data.dp_chaddr);
+
+			/* 2. Determine the requested IP address */
+			requested_ip = get_ip(dhcp_data.dp_ciaddr);
+
+			if (ip4_addr_isany_val(requested_ip)) {
+				/* Initial allocation or INIT-REBOOT: use option 50 */
+				ptr = find_dhcp_option(
+					dhcp_data.dp_options,
+					options_len,
+					DHCP_IPADDRESS
+				);
+
+				if (ptr == NULL) break;
+				if (ptr[1] != 4) break;
+
+				requested_ip = get_ip(ptr + 2);
+			} else {
+				/* Renewal/rebinding: client uses ciaddr */
+				if (old_entry == NULL)
+					break;
+
+				if (old_entry->addr.addr != requested_ip.addr)
+					break;
+			}
+
+			entry = entry_by_ip(requested_ip);
+
+			if (entry == NULL) {
+				/* NAK initial requests for addresses outside our pool */
+				if (ip4_addr_isany_val(get_ip(dhcp_data.dp_ciaddr)))
+					send_nak(netif, upcb, port);
+
+				break;
+			}
+
+			/* Don't allow another client to claim a reserved offer */
+			if (entry->offered &&
+				memcmp(entry->offered_mac, dhcp_data.dp_chaddr, 6) != 0)
+			{
+				if (ip4_addr_isany_val(get_ip(dhcp_data.dp_ciaddr)))
+					send_nak(netif, upcb, port);
+
+				break;
+			}
+
+			/* Don't take another client's address */
+			if (!is_vacant(entry) && entry != old_entry) {
+				/* NAK initial requests for addresses assigned to another client */
+				if (ip4_addr_isany_val(get_ip(dhcp_data.dp_ciaddr)))
+					send_nak(netif, upcb, port);
+
+				break;
+			}
+
+			/* 5. Prepare DHCP ACK */
+			set_ip(dhcp_data.dp_yiaddr, requested_ip);
+			dhcp_data.dp_op = 2;
+
 			dhcp_data.dp_secs = 0;
-			dhcp_data.dp_flags = 0;
 			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
 
-			/* 5. fill options */
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
-			fill_options(dhcp_data.dp_options,
+			fill_options(
+				dhcp_data.dp_options,
 				DHCP_ACK,
 				config->domain,
 				config->dns,
 				entry->lease,
 				*netif_ip4_addr(netif),
 				config->router,
-				*netif_ip4_netmask(netif));
+				*netif_ip4_netmask(netif)
+			);
 
-			/* 6. send ACK */
+			/* 6. Allocate and send ACK */
 			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
-			if (pp == NULL) break;
-			memcpy(entry->mac, dhcp_data.dp_chaddr, 6);
+
+			if (pp == NULL)
+				break;
+
 			memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
-			// RFC 2131 compliant destination selection for DHCP ACK
-			dest_addr = get_dhcp_destination(netif, &dhcp_data, &entry->addr, false);
-			udp_sendto(upcb, pp, &dest_addr, port);
+
+			dest_addr = get_dhcp_destination(
+				netif,
+				&dhcp_data,
+				&entry->addr,
+				false
+			);
+
+			if (udp_sendto(upcb, pp, &dest_addr, port) == ERR_OK) {
+				if (old_entry != NULL && old_entry != entry)
+					free_entry(old_entry);
+
+				memcpy(entry->mac, dhcp_data.dp_chaddr, 6);
+				entry->lease_started = sys_now();
+
+				/* Convert the temporary offer into an active lease */
+				entry->offered = false;
+				entry->offer_started = 0;
+				memset(entry->offered_mac, 0, sizeof(entry->offered_mac));
+			}
+
 			pbuf_free(pp);
 			break;
+		}
+
+		case DHCP_DECLINE: {
+			/* DHCPDECLINE must identify this DHCP server */
+			ptr = find_dhcp_option(
+				dhcp_data.dp_options,
+				options_len,
+				DHCP_SERVERID
+			);
+
+			if (ptr == NULL || ptr[1] != 4)
+				break;
+
+			if (memcmp(ptr + 2, netif_ip4_addr(netif), 4) != 0)
+				break;
+
+			/* Get the declined IP address */
+			ptr = find_dhcp_option(
+				dhcp_data.dp_options,
+				options_len,
+				DHCP_IPADDRESS
+			);
+
+			if (ptr == NULL || ptr[1] != 4)
+				break;
+
+			requested_ip = get_ip(ptr + 2);
+
+			/* Find the address in our pool */
+			entry = entry_by_ip(requested_ip);
+
+			if (entry == NULL)
+				break;
+
+			/* Don't quarantine another client's active lease */
+			if (!is_vacant(entry) && memcmp(entry->mac, dhcp_data.dp_chaddr, 6) != 0)
+				break;
+
+			/* Quarantine the declined address */
+			memset(entry->mac, 0, 6);
+			entry->lease_started = 0;
+			entry->quarantined = true;
+			entry->quarantine_started = sys_now();
+
+			break;
+		}
+
+		case DHCP_RELEASE: {
+			/* Check optional DHCP server identifier */
+			ptr = find_dhcp_option(
+				dhcp_data.dp_options,
+				options_len,
+				DHCP_SERVERID
+			);
+
+			if (ptr != NULL) {
+				if (ptr[1] != 4)
+					break;
+
+				if (memcmp(ptr + 2, netif_ip4_addr(netif), 4) != 0)
+					break;
+			}
+
+			/* RELEASE identifies the client's address through ciaddr */
+			requested_ip = get_ip(dhcp_data.dp_ciaddr);
+
+			if (ip4_addr_isany_val(requested_ip))
+				break;
+
+			/* Find the client's existing lease */
+			entry = entry_by_mac(dhcp_data.dp_chaddr);
+
+			if (entry == NULL)
+				break;
+
+			/* Verify that the address matches the client's lease */
+			if (entry->addr.addr != requested_ip.addr)
+				break;
+
+			/* Release the lease immediately */
+			free_entry(entry);
+
+			break;
+		}
+
+		case DHCP_INFORM: {
+			/* DHCPINFORM requires an existing client address */
+			requested_ip = get_ip(dhcp_data.dp_ciaddr);
+
+			if (ip4_addr_isany_val(requested_ip))
+				break;
+
+			/* DHCPINFORM must not assign or renew a lease */
+			dhcp_data.dp_op = 2;
+			dhcp_data.dp_secs = 0;
+			memset(dhcp_data.dp_yiaddr, 0, 4);
+			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
+
+			memset(dhcp_data.dp_options, 0,
+			       sizeof(dhcp_data.dp_options));
+
+			fill_inform_options(
+				dhcp_data.dp_options,
+				config->domain,
+				*netif_ip4_addr(netif),
+				config->router,
+				*netif_ip4_netmask(netif),
+				config->dns
+			);
+
+			pp = pbuf_alloc(
+				PBUF_TRANSPORT,
+				sizeof(dhcp_data),
+				PBUF_POOL
+			);
+
+			if (pp == NULL)
+				break;
+
+			memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
+
+			/* ciaddr directs the ACK to the existing client */
+			dest_addr = get_dhcp_destination(
+				netif,
+				&dhcp_data,
+				NULL,
+				false
+			);
+
+			udp_sendto(upcb, pp, &dest_addr, port);
+			pbuf_free(pp);
+
+			break;
+		}
 
 		default:
-				break;
+			break;
 	}
 	pbuf_free(p);
 }
