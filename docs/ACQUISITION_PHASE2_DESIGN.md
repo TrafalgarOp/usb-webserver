@@ -241,7 +241,9 @@ Because the margin absorbs slop, the stop does **not** need to be sample-exact
    `ARR = post - 1` is therefore safe by construction (it can only overshoot),
    but the margin must be sized from the **measured** `k`. Subtracting `k` from
    `ARR` (compensation) is optional and only tightens the stop point. Do **not**
-   assume `ARR = post - 1` yields exactly `post` samples after the trigger.
+   assume `ARR = post - 1` yields exactly `post` samples after the trigger:
+   TIM3 is not phase-locked to TIM2 either, so even the nominal count is
+   `post ± 1`. Both uncertainties are absorbed by the margin.
 
 2. **Hardware gate (cleanest).** Put TIM2 in gated slave mode with TIM3 TRGO as
    the gate; arming TIM3 in the trigger ISR lets the hardware stop the sample
