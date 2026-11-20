@@ -1,0 +1,67 @@
+
+:root {
+    color-scheme: dark;
+
+    --bg-main: #10131c;
+    --bg-sidebar: #151925;
+    --bg-panel: #1b2130;
+    --bg-panel-hover: #242c3e;
+
+    --border: rgba(255, 255, 255, 0.08);
+
+    --text-primary: #edf1fa;
+    --text-secondary: #929db2;
+    --text-muted: #68748a;
+
+    --accent: #6d8cff;
+    --accent-hover: #86a0ff;
+
+    --success: #38d996;
+    --danger: #ff667e;
+    --warning: #ffbf69;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+
+    --sidebar-width: 245px;
+
+    font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-main);
+    color: var(--text-primary);
+}
+
+button,
+a {
+    font: inherit;
+}
+
+button {
+    color: inherit;
+}
+
+.text-success {
+    color: var(--success) !important;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 10px rgba(56, 217, 150, 0.4);
+}

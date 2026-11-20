@@ -2,12 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STM32 Webserver</title>
+    <title>STM32 Web Server</title>
+    <!-- Include your CSS files here if any -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- 1. Load the API helper first -->
+    <script src="js/api.js"></script>
 </head>
 <body>
-    <h1>STM32 USB Webserver - Updated</h1>
-    <p>Hello from the STM32F411 Black Pill!</p>
-    <p>USB Ethernet and lwIP are working.</p>
+
+<div class="card">
+    <h3>GPIO Advanced Control</h3>
+
+    <div class="form-group">
+        <label for="gpio-port">Port:</label>
+        <select id="gpio-port">
+            <option value="0">GPIOA</option>
+            <option value="1" selected>GPIOB</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="gpio-pin">Pin (0-15):</label>
+        <input type="number" id="gpio-pin" min="0" max="15" value="1">
+    </div>
+
+    <div class="form-group">
+        <label for="gpio-mode">Mode:</label>
+        <select id="gpio-mode">
+            <option value="output" selected>Output</option>
+            <option value="input">Input</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="gpio-pull">Pull Configuration:</label>
+        <select id="gpio-pull">
+            <option value="none" selected>None</option>
+            <option value="up">Pull-Up</option>
+            <option value="down">Pull-Down</option>
+        </select>
+    </div>
+
+    <div class="form-group" id="state-group">
+        <label for="gpio-state">Output State:</label>
+        <select id="gpio-state">
+            <option value="0">LOW (0)</option>
+            <option value="1">HIGH (1)</option>
+        </select>
+    </div>
+
+    <button id="apply-gpio-btn" class="btn">Apply Configuration</button>
+    <p id="gpio-status" style="margin-top: 10px; font-weight: bold;"></p>
+</div>
+
+<script>
+    // Toggle state dropdown visibility based on whether mode is input or output
+    document.getElementById('gpio-mode').addEventListener('change', (e) => {
+        const stateGroup = document.getElementById('state-group');
+        stateGroup.style.display = e.target.value === 'input' ? 'none' : 'block';
+    });
+
+    document.getElementById('apply-gpio-btn').addEventListener('click', async () => {
+        const port = document.getElementById('gpio-port').value;
+        const pin = document.getElementById('gpio-pin').value;
+        const mode = document.getElementById('gpio-mode').value;
+        const pull = document.getElementById('gpio-pull').value;
+        const state = document.getElementById('gpio-state').value;
+
+        const statusEl = document.getElementById('gpio-status');
+        statusEl.textContent = "Applying...";
+        statusEl.style.color = "orange";
+
+        try {
+            await DeviceAPI.setGPIO({
+                port,
+                pin,
+                mode,
+                pull,
+                state: mode === 'output' ? state : undefined
+            });
+            statusEl.textContent = "Success! Port " + (port == 0 ? 'A' : 'B') + " Pin " + pin + " updated.";
+            statusEl.style.color = "green";
+        } catch (err) {
+            statusEl.textContent = "Error: " + err.message;
+            statusEl.style.color = "red";
+        }
+    });
+</script>
+
 </body>
 </html>

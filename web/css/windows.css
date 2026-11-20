@@ -1,0 +1,136 @@
+
+.module-badge {
+    padding: 7px 11px;
+    border: 1px solid rgba(109, 140, 255, 0.25);
+    background: rgba(109, 140, 255, 0.10);
+    color: #91a8ff;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.tool-window {
+    max-width: 650px;
+    background: rgba(27, 33, 48, 0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 17px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.window-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.window-dot {
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+.window-subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.window-content {
+    padding: 22px;
+}
+
+.pin-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.pin-name,
+.pin-description {
+    display: block;
+}
+
+.pin-name {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.pin-description {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.pin-state {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.pin-state.on {
+    color: var(--success);
+}
+
+.pin-state.off {
+    color: var(--danger);
+}
+
+.gpio-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.control-button {
+    flex: 1;
+    padding: 13px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.control-button:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+
+.on-button {
+    background: rgba(56, 217, 150, 0.13);
+    color: var(--success);
+    border-color: rgba(56, 217, 150, 0.2);
+}
+
+.off-button {
+    background: rgba(255, 102, 126, 0.12);
+    color: var(--danger);
+    border-color: rgba(255, 102, 126, 0.2);
+}
+
+.message-box {
+    margin-top: 18px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--text-secondary);
+    font-size: 11px;
+}

@@ -13,6 +13,10 @@
 #include "lwip/prot/ethernet.h"
 #include "lwip/timeouts.h"
 #include "lwip/sys.h"
+#include "main.h"
+#include "hardware.h"
+#include "api.h"
+
 
 #define INIT_IP4(a, b, c, d) \
   { PP_HTONL(LWIP_MAKEU32(a, b, c, d)) }
@@ -242,16 +246,14 @@ uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg) {
   return pbuf_copy_partial(p, dst, p->tot_len, 0);
 }
 
-void usb_network_services_init(void)
-{
+void usb_network_services_init(void) {
   err_t err = dhserv_init(&dhcp_config);
 
-  if (err != ERR_OK)
-  {
+  if (err != ERR_OK) {
     printf("ERROR: DHCP server initialization failed: %d\n", err);
     return;
   }
-
+  API_Init();
   httpd_init();
 }
 
