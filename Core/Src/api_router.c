@@ -1074,6 +1074,10 @@ static uint16_t route_acq_status(API_Route_t *meta, char *body, uint16_t cap)
     JSON_Bool(&w, ACQ_GetOverrun());
     JSON_Raw(&w, ",\"dma_errors\":");
     JSON_UInt(&w, ACQ_GetDmaErrors());
+    JSON_Raw(&w, ",\"timeouts\":");
+    JSON_UInt(&w, ACQ_GetTimeouts());
+    JSON_Raw(&w, ",\"tail_overruns\":");
+    JSON_UInt(&w, ACQ_GetTailOverruns());
     JSON_Raw(&w, ",\"elapsed_us\":");
     JSON_UInt(&w, ACQ_GetElapsedUs());
     JSON_Raw(&w, "}}");

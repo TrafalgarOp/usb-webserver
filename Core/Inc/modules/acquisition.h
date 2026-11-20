@@ -83,6 +83,8 @@ uint32_t    ACQ_GetCaptured(void);     /* samples captured */
 uint32_t    ACQ_GetElapsedUs(void);    /* measured capture window */
 uint8_t     ACQ_GetOverrun(void);      /* ADC overrun seen this capture */
 uint8_t     ACQ_GetDmaErrors(void);    /* DMA TE/DME/FE errors this capture */
+uint8_t     ACQ_GetTimeouts(void);     /* captures aborted by the watchdog */
+uint32_t    ACQ_GetTailOverruns(void); /* benign post-burst overruns ignored */
 
 /*
  * Transport view. ACQ_BeginRead pins the buffer and moves COMPLETE->STREAMING;

@@ -88,6 +88,8 @@ static uint16_t acq_buffer[ACQ_MAX_SAMPLES] __attribute__((aligned(4)));
 static volatile ACQ_State_t acq_state = ACQ_STATE_IDLE;
 static volatile uint8_t acq_overrun = 0;
 static volatile uint8_t acq_dma_errors = 0;
+static volatile uint8_t acq_timeouts = 0;
+static volatile uint32_t acq_tail_ovr = 0;    /* benign post-burst overruns */
 
 static uint32_t acq_capture_id = 0;
 static uint32_t acq_rate_hz = 0;
@@ -195,8 +197,23 @@ void ADC_IRQHandler(void)
 
     if ((sr & ADC_SR_OVR) && acq_state == ACQ_STATE_CAPTURING)
     {
-        acq_overrun = 1;
-        acq_finalize(1);
+        /*
+         * A tail overrun is expected: the trigger after the last one can slip
+         * in before the completion path stops the timer, and its result has no
+         * DMA slot left. That is harmless once the programmed count has been
+         * transferred (NDTR == 0), so it must not turn a good capture into an
+         * error. Only an overrun while transfers are still outstanding means
+         * real sample loss.
+         */
+        if (DMA2_Stream0->NDTR != 0)
+        {
+            acq_overrun = 1;
+            acq_finalize(1);
+        }
+        else
+        {
+            acq_tail_ovr++;
+        }
     }
 }
 
@@ -242,7 +259,8 @@ void ACQ_Init(void)
     ADC1->CR1  = ADC_CR1_OVRIE;
     ADC1->CR2  = ADC_CR2_EXTEN_0                     /* rising edge        */
                | ADC_CR2_EXTSEL_1 | ADC_CR2_EXTSEL_2 /* 0110 = TIM2_TRGO    */
-               | ADC_CR2_DMA;                        /* DMA mode           */
+               | ADC_CR2_DMA                         /* DMA mode           */
+               | ADC_CR2_DDS;                        /* keep DMA requests  */
     ADC1->SQR1 = 0;                                  /* one conversion     */
     ADC1->SQR2 = 0;
     ADC1->SQR3 = 0;                                  /* SQ1 = channel 0    */
@@ -265,17 +283,20 @@ void ACQ_Init(void)
 
     /* --- TIM2: TRGO = update event; period programmed per capture. --- */
     TIM2->CR1 = 0;
-    TIM2->CR2 = TIM_CR2_MMS_1;   /* MMS = 010 (update) */
+    TIM2->CR2 = 0;               /* TRGO low while loading */
     TIM2->PSC = 0;
     TIM2->ARR = 0;
     TIM2->CNT = 0;
-    TIM2->EGR = TIM_EGR_UG;
+    TIM2->EGR = TIM_EGR_UG;      /* latch; no TRGO edge emitted */
     TIM2->SR  = 0;
+    TIM2->CR2 = TIM_CR2_MMS_1;   /* update event -> TRGO */
 
-    /* --- Interrupts: below USB (priority 5) so USB is never delayed. --- */
+    /* --- Interrupts: DMA completion must outrank the ADC overrun so a tail
+     * overrun cannot abort a transfer that already finished. Both stay below
+     * USB (priority 5). --- */
     NVIC_SetPriority(DMA2_Stream0_IRQn, 6);
     NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-    NVIC_SetPriority(ADC_IRQn, 6);
+    NVIC_SetPriority(ADC_IRQn, 7);
     NVIC_EnableIRQ(ADC_IRQn);
 
     /* --- DWT cycle counter for a microsecond-accurate capture window. --- */
@@ -339,6 +360,8 @@ ACQ_Status_t ACQ_Start(uint32_t rate_hz, uint32_t samples)
 
     acq_overrun = 0;
     acq_dma_errors = 0;
+    acq_timeouts = 0;
+    acq_tail_ovr = 0;
     acq_captured = 0;
     acq_elapsed_us = 0;
     acq_rate_hz = rate_hz;
@@ -351,13 +374,16 @@ ACQ_Status_t ACQ_Start(uint32_t rate_hz, uint32_t samples)
     /* Re-arm the DMA for this length (NDTR is writable while the stream is off). */
     DMA2_Stream0->NDTR = (uint16_t)samples;
 
-    /* Timer geometry for this rate. */
+    /* Timer geometry for this rate. Load PSC/ARR with TRGO held low so the
+     * update event that latches them does not emit a spurious trigger. */
     TIM2->CR1 = 0;
+    TIM2->CR2 = 0;
     TIM2->PSC = psc;
     TIM2->ARR = arr;
     TIM2->CNT = 0;
     TIM2->EGR = TIM_EGR_UG;
     TIM2->SR  = 0;
+    TIM2->CR2 = TIM_CR2_MMS_1;   /* update event -> TRGO */
 
     /* Arm DMA, then start the trigger source last. The ADC is already on. */
     DMA2_Stream0->CR |= DMA_SxCR_EN;
@@ -397,7 +423,7 @@ void ACQ_Task(void)
 
         if ((HAL_GetTick() - acq_start_tick) > expected_ms)
         {
-            acq_dma_errors++;   /* capture never completed: treat as a fault */
+            acq_timeouts++;   /* capture never completed: treat as a fault */
             acq_finalize(1);
         }
     }
@@ -415,6 +441,8 @@ uint32_t    ACQ_GetCaptured(void)  { return acq_captured; }
 uint32_t    ACQ_GetElapsedUs(void) { return acq_elapsed_us; }
 uint8_t     ACQ_GetOverrun(void)   { return acq_overrun; }
 uint8_t     ACQ_GetDmaErrors(void) { return acq_dma_errors; }
+uint8_t     ACQ_GetTimeouts(void)  { return acq_timeouts; }
+uint32_t    ACQ_GetTailOverruns(void) { return acq_tail_ovr; }
 
 uint8_t ACQ_BeginRead(const uint16_t **samples, uint32_t *count)
 {
