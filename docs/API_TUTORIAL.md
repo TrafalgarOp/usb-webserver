@@ -2387,3 +2387,231 @@ logging ON:   RAM 52264 B / 128 KB (39.87%)   FLASH 131092 B / 512 KB (25.00%)
 
 The SWO/ITM back-end adds 76 bytes of flash over the no-op stub. RAM is unchanged; both are
 stateless and use no buffer.
+
+---
+
+## Chapter 11 — Burst acquisition (ADC + timer-triggered DMA)
+
+The transport chapters measure how fast bytes can move. This chapter is about
+acquiring *measurements*: sampling an analog input at a fast, fixed rate for a
+short window and then shipping the captured buffer to the browser.
+
+The model is an **oscilloscope**, not a live stream. Sample fast for a defined
+window into SRAM, then transfer. USB does not have to keep up in real time, so
+the acquisition rate is set by the ADC and a timer, never by the network.
+
+### 11.1 Hardware path
+
+```
+PA0 ──▶ ADC1 (one channel)
+          ▲
+TIM2 TRGO ┘            every TRGO: one conversion
+          │
+          ▼
+        DMA2 Stream 0 ──▶ acq_buffer[] in SRAM
+```
+
+- **TIM2** runs from the 96 MHz APB1 timer clock and emits an update-event
+  TRGO at the requested rate. It is the sample clock.
+- **ADC1** is set for 12-bit, single channel (IN0), external trigger = TIM2
+  TRGO rising edge, DMA enabled. With ADCCLK = PCLK2/4 = 24 MHz.
+- **DMA2 Stream 0 / Channel 0** moves each conversion from `ADC1->DR` into a
+  fixed `uint16_t` buffer in normal (one-shot) mode. The CPU never touches an
+  individual sample.
+
+The engine lives in `Core/Src/modules/acquisition.c`. It includes no lwIP or USB
+header: it is a pure producer, and the transport is a separate consumer.
+
+### 11.2 Sample rate and window
+
+The **rate** is the timer period. The **sample window** (ADC sample time) is
+chosen as the *longest* one whose conversion still fits inside one trigger
+period — a longer window means a lower source-impedance requirement.
+
+Conversion time for a 12-bit sample is `(sample_cycles + 12) / 24 MHz`. A window
+fits when `(sample_cycles + 12) * 4 <= timer_ticks`. So:
+
+| rate | timer ARR | sample window | conversion |
+|------|-----------|---------------|------------|
+| 1.600 MS/s | 59 | 3 cycles | 0.625 μs |
+| 1.000 MS/s | 95 | 3 cycles | 0.625 μs |
+| 0.500 MS/s | 191 | 28 cycles | 1.667 μs |
+| 0.250 MS/s | 383 | 84 cycles | 4.000 μs |
+| 0.100 MS/s | 959 | 144 cycles | 6.500 μs |
+
+A rate is accepted only if it divides the 96 MHz timer clock exactly, so the
+period is precise; anything else is `400`.
+
+### 11.3 API surface
+
+All under `/api/v1/acquisition`:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/capture` | Start a burst. Body `{"rate_hz":N,"samples":M}`. → `202 Accepted` |
+| `GET`  | `/status`  | State, counters and timing. → `200` |
+| `GET`  | `/data`    | Stream the raw samples as `application/octet-stream`. → `200` |
+| `DELETE` | `/`      | Discard the capture, return to `idle`. → `204` |
+
+Start a capture and poll:
+
+```console
+$ curl -s -X POST 192.168.7.1:8080/api/v1/acquisition/capture \
+       -H 'Content-Type: application/json' \
+       -d '{"rate_hz":1000000,"samples":24576}'
+{"success":true,"data":{"state":"capturing","capture_id":1,
+ "rate_hz":1000000,"samples":24576}}
+
+$ curl -s 192.168.7.1:8080/api/v1/acquisition/status
+{"success":true,"data":{"state":"complete","capture_id":1,
+ "rate_hz":1000000,"capacity":24576,"captured":24576,
+ "sample_bytes":2,"resolution_bits":12,"reference_mv":3300,
+ "overrun":false,"dma_errors":0,"timeouts":0,"tail_overruns":0,
+ "elapsed_us":24577}}
+```
+
+`POST` returns immediately; the capture runs in the background and never blocks
+the main loop or a TCP request. `elapsed_us` is the measured window, taken with
+the DWT cycle counter.
+
+### 11.4 States and ownership
+
+```
+idle ──POST──▶ capturing ──done──▶ complete ──GET /data──▶ streaming ──┐
+  ▲                                  │                                  │
+  └──────────── DELETE ──────────────┴──────────────────────────────────┘
+                                     └── fault ──▶ error ──DELETE──▶ idle
+```
+
+`complete` **holds the client's data**. A new `POST` while `complete` or
+`streaming` is refused with `409 ACQUISITION_BUSY` rather than silently
+overwriting the buffer. `DELETE` is required before the next capture. The
+transport pins the buffer (`COMPLETE → STREAMING`) only after it has taken the
+shared single-session bulk gate, and releases it exactly once on close, RST or
+timeout, so a slow client can never block the producer.
+
+### 11.5 Raw samples, not millivolts
+
+`/data` streams `captured` little-endian `uint16` values, each a right-aligned
+12-bit code `0..4095`. The acquisition path stores exactly what the ADC
+produced; conversion to a voltage is the client's business using `reference_mv`
+and `resolution_bits`. This keeps the fast path free of arithmetic and preserves
+the original measurement.
+
+### 11.6 Configuring the input
+
+PA0 / ADC1_IN0 is a plain analog input:
+
+- It is **reserved**: it is outside the GPIO whitelist in `modules/gpio.c`, so the
+  GPIO API can never reconfigure or drive it. The acquisition module owns it.
+- With nothing connected, a capture reads input noise (roughly 650..1340 codes
+  in the bring-up). The timing and transport behaviour are independent of the
+  signal.
+
+### 11.7 Recognised errors
+
+| Condition | Response |
+|-----------|----------|
+| Rate not a divisor of 96 MHz, or out of range | `400 INVALID_VALUE` |
+| `samples` 0 or > `capacity` | `400 INVALID_VALUE` |
+| Malformed / unknown JSON field | `400 INVALID_JSON` |
+| Wrong content type | `415 UNSUPPORTED_MEDIA_TYPE` |
+| Wrong method for the route | `405 METHOD_NOT_ALLOWED` |
+| Capturing / streaming already active | `409 ACQUISITION_BUSY` |
+| No completed capture to read | `404 NO_DATA` |
+
+---
+
+## Appendix I — Verified increment log: burst acquisition
+
+Branch `acquisition-dma-capture`, build `Debug`. Device `192.168.7.1`, host
+`192.168.7.2/24`.
+
+### I.1 What changed
+
+| File | Change |
+|------|--------|
+| `Core/Inc/modules/acquisition.h` | Public engine interface and limits |
+| `Core/Src/modules/acquisition.c` | Bare-metal ADC1/TIM2/DMA2 engine + IRQ handlers |
+| `Core/Inc/hardware_config.h` | `ENABLE_ADC` 0 → 1 |
+| `Core/Src/hardware.c` | `ACQ_Init()` / `ACQ_Task()` hooks |
+| `Core/Src/modules/gpio.c` | Documents PA0 as reserved (comment only) |
+| `Core/Inc/api_router.h` | `API_Route_t.stream_src` (pattern vs buffer) |
+| `Core/Src/api_router.c` | Four acquisition routes + JSON |
+| `Core/Src/api_server.c` | Buffer-backed stream; acquisition session ownership |
+| `CMakeLists.txt` | Adds the acquisition module |
+| `tools/acq_capture.py` | Host capture client |
+| `docs/ACQUISITION_DESIGN.md` | Design + bring-up results |
+
+No `.ioc`, `stm32f4xx_hal_conf.h` or `cmake/stm32cubemx/CMakeLists.txt` change:
+the vendored HAL has no ADC/TIM module, so the engine is register-level against
+the CMSIS device header. lwIP buffer sizes and the benchmark path are untouched.
+
+### I.2 Two faults found on hardware
+
+**F1 — only the first burst after reset completed.** The next capture hung until
+the watchdog aborted it. During the hang the timer ran, the DMA stream was
+enabled and the ADC DMA mode was set, yet `NDTR` never moved. `ADC_CR2.DDS=0`
+means the ADC issues no new DMA request after the last transfer of a burst, so
+the converter was left "DMA-done". Fixed by setting `DDS=1`.
+
+**F2 — a tail overrun could mark a completed burst as `ERROR`.** A trigger
+arriving as the burst ended completed a conversion with no DMA slot left,
+setting `OVR`; if the ADC interrupt ran first it won the state. Fixed by giving
+the DMA completion interrupt priority over the overrun interrupt and by treating
+an overrun as fatal only while `NDTR != 0`. Post-burst overruns are counted as
+`tail_overruns`.
+
+### I.3 Timing transcript
+
+```
+burst acquisition: rate=1000000 Hz samples=24576 (49152 bytes)
+ rep     capt_ms      exp_ms     xfer_ms   xfer_MB/s         min     max    ovr
+   1      24.577      24.576      74.686       0.658         858        1339      no      0
+   2      24.577      24.576      74.287       0.662         653        1337      no      0
+   ...
+  40      24.577      24.576      74.462       0.660         686        1338      no      0
+  samples=24576 mean=1298.0 span=24.576 ms state=complete
+```
+
+Rate sweep (24 576 samples), measured vs expected:
+
+| rate | expected | measured |
+|------|----------|----------|
+| 1.600 MS/s | 15 360 μs | 15 362 |
+| 1.000 MS/s | 24 576 μs | 24 577 |
+| 0.500 MS/s | 49 152 μs | 49 152 |
+| 0.250 MS/s | 98 304 μs | 98 302 |
+| 0.100 MS/s | 245 760 μs | 245 749 |
+| 0.050 MS/s | 491 520 μs | 491 509 |
+
+### I.4 Concurrency and regression
+
+```
+normal traffic during a data transfer:
+  data stream opened: status=200 content-length=49152
+  during transfer GET /api/v1/system               -> 200
+  during transfer GET /api/v1/gpio                 -> 200
+  during transfer GET /api/v1/acquisition/status   -> 200
+  stream payload after probes: ok (49152/49152 bytes)
+```
+
+Benchmark unchanged: 128 KB body 0.647 MB/s (baseline 0.648).
+
+### I.5 Footprint
+
+```text
+RAM   101464 B / 128 KB (77.4%)    FLASH 136904 B / 512 KB (26.1%)
+acq_buffer = 49152 B (48 KB), ACQ_MAX_SAMPLES = 24576
+```
+
+### I.6 Reproduce
+
+```bash
+cmake --preset Debug && cmake --build --preset Debug
+STM32_Programmer_CLI -c port=SWD freq=4000 \
+  -w build/Debug/usb-webserver.elf -v -rst
+
+python3 tools/acq_capture.py --repeats 5            # timing + throughput
+python3 tools/acq_capture.py --concurrent           # normal traffic during a stream
+```

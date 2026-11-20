@@ -336,3 +336,70 @@ capture length, no circular DMA, no external trigger, no continuous streaming.
 
 Transfer/capture timing at the default: sample interval 1 µs, 24 576 samples,
 capture window **24.576 ms**, transfer **≈ 75.6 ms at 0.65 MB/s**.
+
+---
+
+## 10. Bring-up results (Phase 1, hardware-verified)
+
+Flashed build: `Debug`, branch `acquisition-dma-capture`. ADC1_IN0 on PA0 with
+no source connected, so sample values are input noise; the timing, ownership and
+transport behaviour below do not depend on the signal.
+
+### 10.1 Two faults found and fixed
+
+**F1 — only the first burst after reset completed.** The second capture hung
+until the watchdog aborted it. Registers during the hang: timer running
+(`CR1.CEN=1`), DMA stream enabled (`CR=0x22c17`, `EN=1`), ADC DMA mode set
+(`CR2` DMA=1), yet `NDTR` stayed at the full count — zero transfers.
+
+Cause: `ADC_CR2.DDS=0` means *the ADC issues no new DMA request after the last
+transfer of a burst*. The converter was left "DMA-done" from the previous
+burst. Fix: set `DDS=1`. The trigger timer is stopped in the completion handler,
+so no conversion outlives the burst.
+
+**F2 — an overrun could turn a completed burst into `ERROR`.** With `DDS=1`, a
+trigger arriving as the burst ends could complete a conversion with no DMA slot
+left, setting `OVR`. If the ADC interrupt ran before the DMA completion
+interrupt it claimed the state as `ERROR` even though all samples had
+transferred. Fix (two layers):
+
+- the DMA completion interrupt now outranks the ADC overrun interrupt, so the
+  timer is stopped before the next trigger; and
+- an overrun is only fatal while `NDTR != 0` (transfers still outstanding). A
+  post-burst overrun is counted as `tail_overruns` and ignored.
+
+This is exactly the "contradictory state transition" case: the completion and
+the overrun now converge on one finaliser that claims the state once.
+
+### 10.2 Timing (24 576 samples)
+
+| rate | expected | measured `elapsed_us` |
+|------|----------|-----------------------|
+| 1.600 MS/s | 15 360 μs | 15 362 |
+| 1.000 MS/s | 24 576 μs | 24 577 |
+| 0.500 MS/s | 49 152 μs | 49 152 |
+| 0.250 MS/s | 98 304 μs | 98 302 |
+| 0.100 MS/s | 245 760 μs | 245 749 |
+| 0.050 MS/s | 491 520 μs | 491 509 |
+
+Measured with the DWT cycle counter. Deviations are ≤ 11 μs, i.e. the timer
+period; the rate is exact.
+
+### 10.3 Transport and robustness
+
+- 40/40 consecutive captures complete; no overrun, no DMA error, no timeout.
+- 48 KB stream transfer ≈ 74.5 ms at **0.659 MB/s** (capture and transfer are
+  independent phases).
+- During a data stream, `GET /system`, `GET /gpio` and `GET /status` all answer
+  `200` and the stream payload is delivered in full (49 152/49 152 bytes).
+- Benchmark regression: 128 KB body unchanged at **0.647 MB/s**.
+- Ownership: `POST` while `COMPLETE` → `409 ACQUISITION_BUSY`; the previous
+  capture is never overwritten.
+- Errors: bad rate/size → `400 INVALID_VALUE`; malformed/unknown JSON →
+  `400 INVALID_JSON`; wrong media type → `415`; wrong method → `405`;
+  no capture to read → `404 NO_DATA`.
+
+### 10.4 Footprint
+
+`.bss` 101 148 B, `.data` 316 B → **101 464 B RAM (77.4 %)**; ~28.9 KB free.
+Flash 136 904 B (26.1 %).
