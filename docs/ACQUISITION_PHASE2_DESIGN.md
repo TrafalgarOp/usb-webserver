@@ -69,11 +69,25 @@ raise `ADC_SR.AWD`. This is the best fit for Phase 2:
 - costs **no extra RAM** and no extra pin;
 - accuracy ±1 sample, set only by interrupt latency.
 
-The watchdog is a **level** comparator, not an edge detector. For "crossed a
-threshold going up" semantics, set `LTR = level`, `HTR = 0xFFF`, then disarm
-after the first hit (single-shot). A genuine edge (rising *through* a
-threshold) is not directly available from AWD; that is what the external path
-is for.
+The watchdog flags a conversion whose result is **outside** the window
+`[LTR, HTR]` — i.e. `< LTR` or `> HTR` — so the window encodes the direction:
+
+| Wanted condition | Window | `LTR` | `HTR` |
+|------------------|--------|-------|-------|
+| rising: first code **above** `level` | `[0, level]` | 0 | `level` |
+| falling: first code **below** `level` | `[level, 4095]` | `level` | 4095 |
+
+A code exactly equal to `level` is *inside* the window and does not trigger, so
+the semantics are strict (`> level` / `< level`). (An earlier draft of this
+document had these two rows swapped — the window, not the edge field, selects
+the direction.)
+
+The watchdog is a **level** comparator, not an edge detector: it keeps flagging
+for as long as the input stays out of window. It must therefore be **disarmed on
+the first hit** — clear `AWDIE` and `AWDEN` in the ISR, then clear the status
+flag (`ADC_SR.AWD` is `rc_w0`) — so the ring can keep filling without a storm of
+watchdog interrupts. A true *edge through* a threshold is not directly available
+from AWD; that is what the external path is for.
 
 ### 2.2 Optional trigger: external digital edge
 
@@ -112,6 +126,12 @@ one or more samples past the offending one:
 i_trig = w - k       k = samples completed between the AWD event and the read
 ```
 
+The AWD interrupt and the DMA write for the *same* conversion are independent
+hardware paths, so either can be observed first: the ISR may run before that
+conversion's ring slot is updated, or after. `k` is therefore a **signed,
+modular offset**, not an unsigned difference, and the probe must record it as
+such rather than assume an order.
+
 `k` is expected to be 0 or 1 at 1 MS/s but is **not proven**. Therefore:
 
 - the "±1 sample" figure is a hypothesis, not a specification;
@@ -123,9 +143,7 @@ i_trig = w - k       k = samples completed between the AWD event and the read
   rate-dependent; or (c) timestamp with a second channel (external edge, §2.2),
   which removes the CPU from the path entirely.
 
-The §8.1 self-test is what makes this measurable: with a known input the
-captured window can be checked against the expected location of the trigger
-sample, at each rate.
+The probe in §10.1 is what makes this measurable, at each rate and under load.
 
 ---
 
@@ -165,64 +183,123 @@ during warm-up are ignored.
 
 ### 3.2 Trigger position is configurable
 
-`pre` and `post` are request parameters. Requested `samples` is the **total
-requested count, `pre + post`**. Note this is deliberately *not* the ring size
-`N`: `N = ACQ_MAX_SAMPLES` is only the physical ring, while the capture length
-is `pre + post`, constrained by `pre + post <= N - ACQ_STOP_MARGIN`. Typical
-presets: `pre = N/2, post = N/4` (centre trigger), `pre = 0` (post only),
-`pre = 3N/4` (deep pre-trigger).
+The request carries the total count `samples` and the pre-trigger count
+`trigger.pre`; `post = samples - pre` is derived. The capture length is
+`samples = pre + post`, deliberately *not* the ring size `N`:
+`N = ACQ_MAX_SAMPLES` is only the physical ring.
+
+Constraints (all → `400 INVALID_VALUE` otherwise):
+
+- `1 <= post` (a triggered capture needs at least one post-trigger sample, so
+  `pre == samples` is rejected);
+- `0 <= pre < samples`;
+- `samples <= N - ACQ_STOP_MARGIN` (§3.3), i.e. the stop margin is **reserved
+  out of the ring**, not left implicit. With `N = 24576` and the initial margin
+  of 256, the effective maximum is **24320 samples**.
+
+Typical presets: `pre = N/2, post = N/4` (centre trigger), `pre = 0` (post
+only), `pre = 3N/4` (deep pre-trigger).
 
 ### 3.3 Stopping after `post` samples
 
-Circular DMA never ends, so the stop must be produced. The write index advances
-from `i_trig`; the oldest sample of the window, `i_trig - pre`, is overwritten
-after `N - pre` more samples. We must therefore stop somewhere in the window
-`(post, N - pre)` samples after the trigger, and we keep `pre + post`. The
-**stop margin** is `N - pre - post` samples; require it to be comfortably
-positive (proposal: `ACQ_STOP_MARGIN = 256` samples).
+Circular DMA never ends, so the stop has to be produced. The write index
+advances from `i_trig`; the oldest sample of the window, `i_trig - pre`, is
+overwritten after `N - pre` more samples. So the stop must land somewhere in
+`(post, N - pre)` samples after the trigger, and the **stop margin** is
 
-Because the margin absorbs several samples of slop, the stop does **not** need
-to be sample-exact — only `i_trig` must be accurate. Candidate stop
-mechanisms, cheapest first:
+```text
+ACQ_STOP_MARGIN = (N - pre) - post = N - samples     [samples]
+```
 
-1. **Delayed-stop helper timer (recommended for 2a).** In the AWD ISR, record
-   `i_trig` and start a one-pulse helper timer (e.g. TIM3, 96 MHz, `ARR =
-   post-1`). Its update interrupt stops TIM2 + DMA and finalises. Stop slop is
-   the timer-IRQ latency, ±1–2 samples, absorbed by the margin. One extra timer,
-   no extra RAM.
+This is ring **capacity, not slack**: §3.2 reserves it out of the ring. Its size
+must cover the worst-case delay of the whole stop path, so the pre-trigger
+window is never overwritten. Proposal: start at 256 and confirm experimentally
+(§10.2).
+
+Because the margin absorbs slop, the stop does **not** need to be sample-exact
+— only `i_trig` must be accurate. Candidate stop mechanisms, cheapest first:
+
+1. **Delayed-stop helper timer (recommended for 2a).** TIM3, one-pulse, armed
+   in the AWD ISR. To make one tick equal one sample period it must be
+   **prescaled to the sample rate**, not left at 96 MHz:
+
+   ```text
+   TIM3 PSC = 96_000_000 / rate_hz - 1     (rates divide 96 MHz exactly)
+   TIM3 ARR = post - 1
+   → update interrupt after `post` sample periods
+   ```
+
+   e.g. 1 MS/s → PSC 95; 1.6 MS/s → PSC 59; 500 kS/s → PSC 191. `post` fits the
+   16-bit `ARR` (`post <= 24320`). Set `URS` so arming emits no spurious update.
+
+   **Latency caveat (central, not a detail):** the timer starts in the AWD ISR,
+   not at the offending conversion, so it begins `k` samples late (§2.4).
+   Sampling therefore actually stops `post + k + slop` samples after `i_trig`,
+   where `slop` is the stop-ISR latency. Extraction always takes exactly
+   `[i_trig - pre, i_trig + post)`, so stopping *late* is harmless **provided the
+   margin covers `k + slop`**, while stopping *early* would truncate `post`.
+   `ARR = post - 1` is therefore safe by construction (it can only overshoot),
+   but the margin must be sized from the **measured** `k`. Subtracting `k` from
+   `ARR` (compensation) is optional and only tightens the stop point. Do **not**
+   assume `ARR = post - 1` yields exactly `post` samples after the trigger.
+
 2. **Hardware gate (cleanest).** Put TIM2 in gated slave mode with TIM3 TRGO as
    the gate; arming TIM3 in the trigger ISR lets the hardware stop the sample
    clock itself, with no interrupt in the stop path. More configuration, and it
    reinterprets the Phase 1 TIM2 setup — worth doing only if (1) shows visible
    jitter.
+
 3. **Reprogramming `NDTR` at the trigger** — rejected: `NDTR` is only writable
    while the stream is disabled, and a mid-capture disable drops samples right
    at the trigger, which is the worst place to lose them.
 
+**The trigger timeout does not use TIM3.** A 1 kHz tick is *not* reachable from
+96 MHz within the 16-bit prescaler — the slowest tick is
+`96 MHz / 65536 ≈ 1464.8 Hz` — so a "1 kHz / `ARR = 999`" form is not
+implementable as written. The timeout is handled in the cooperative loop exactly
+like the Phase 1 capture watchdog: `ACQ_Task` compares `HAL_GetTick()` against
+`trigger_timeout_ms` while in `ARMED`. If a hardware timeout were ever preferred,
+use `PSC = 65535` (tick ≈ 1.465 kHz) with `ARR ≈ trigger_timeout_ms · 1.465`.
+
 ### 3.4 Freezing into a linear buffer (no second buffer)
 
 After the stop, the valid window `[i_trig - pre, i_trig + post)` may wrap. To
-keep the transport untouched, **rotate it in place** so it starts at index 0:
+keep the transport untouched, **rotate it in place** so it starts at index 0.
+The rotate is only allowed to run when **all** of the following hold:
 
-- three-reversal rotate: O(1) extra memory, touches each of the `pre + post`
-  elements twice;
-- cost: ≈ 2 · 24576 · 2 B of moves ≈ 50 k cycles ≈ **< 1 ms**, done *after*
-  sampling stops, so it never touches the real-time path;
-- the `/data` route then streams `acq_buffer[0 .. pre+post)` exactly as today.
+- **DMA and the trigger timer are stopped** — the sampling path is quiescent;
+- **the transport does not own the buffer** — the rotate happens inside the
+  `CAPTURING → COMPLETE` transition, before `ACQ_BeginRead` can pin it, so a
+  stream can never observe a half-rotated buffer;
+- it produces **exactly `pre + post` samples in chronological order**, starting
+  at the oldest pre-trigger sample;
+- it uses **bounded, tested operations and no second full-size buffer** —
+  three-reversal rotate, O(1) extra memory, each element touched twice,
+  ≈ 2 · `samples` · 2 B of moves ≈ 1 ms worst case, all off the real-time path.
 
-Alternative (not chosen): extend `API_Stream_Src_t` to emit two ranges, which
-avoids the rotate but touches `api_server.c`. Rotation is lower-risk for 2a.
+The `/data` route then streams `acq_buffer[0 .. pre+post)` exactly as today, so
+`api_server.c` and the streaming contract are unchanged.
+
+Alternative (not chosen): extend `API_Stream_Src_t` to emit two ranges (natural
+segment then wrapped segment), which avoids the move but adds a new code path to
+the already-tested data endpoint. In-place rotation is the lower-risk choice for
+2a.
 
 ### 3.5 Timeout and fault handling
 
-- **No trigger:** from `armed`, if `trigger_timeout_ms` elapses (proposal:
-  default 1000 ms, range 10–10000) abort to `ERROR`, stop TIM2/DMA, bump a
-  counter. This replaces "waiting forever" with a visible, recoverable state.
-- **Overrun / DMA error:** the Phase 1 rules extend unchanged and stay fatal in
-  `ARMED` or `CAPTURING` (a stalled ring loses pre-trigger data). The tail-overrun
-  exemption is Phase 1-specific and does not apply to a circular burst.
+- **No trigger:** from `ARMED`, if `trigger_timeout_ms` elapses (default
+  1000 ms, range 10–10000) abort to `ERROR`, stop TIM2/DMA/TIM3, and set a
+  distinct fault reason. The state carries **`TRIGGER_TIMEOUT`** so a client can
+  tell an absent trigger apart from a user-requested discard
+  (`DELETE` → `IDLE`). `DELETE` must still work from `ERROR` and return the
+  engine to `IDLE`.
+- **Overrun / DMA error:** the Phase 1 rules extend and stay fatal in `ARMED` or
+  `CAPTURING` (a stalled ring loses pre-trigger data). The Phase 1 tail-overrun
+  exemption is specific to a *finite* burst and does **not** apply to the
+  circular ring.
 - The finaliser stays the single point that claims the state under
-  `__disable_irq()`, so a late watchdog/overrun/DMA event cannot double-transition.
+  `__disable_irq()`, so a late watchdog/overrun/DMA/stop event cannot
+  double-transition.
 
 ---
 
@@ -255,15 +332,17 @@ their own decisions, not Phase 2.
 | Quantity | Value | Notes |
 |----------|-------|-------|
 | Rate range | 50 kS/s – 1.6 MS/s | unchanged from Phase 1 |
-| AWD index error | **±1 sample (hypothesis)** | §2.4: ADC flag + IRQ latency; must be measured per rate, not assumed |
+| Max capture length | `N - ACQ_STOP_MARGIN` = 24320 | margin reserved out of the ring |
+| AWD index error (`k`) | **unknown (hypothesis ≤ 1 sample)** | §2.4 / §10.1: measure per rate and under load |
 | External-edge index error | ±1 sample | hardware latch, load-independent |
-| Stop slop (helper timer) | ±1–2 samples | absorbed by `ACQ_STOP_MARGIN` |
+| TIM3 helper prescaler | `96e6 / rate_hz - 1` | one helper tick = one sample period |
+| Stop overshoot | `post + k + slop` after `i_trig` | always ≥ `post`; margin must cover `k + slop` |
 | Warm-up before accept | `pre` samples | e.g. 12.3 ms at 1 MS/s, `pre = 12288` |
 | Pre-trigger window | `pre / rate` | 12.288 ms at 1 MS/s, `pre = 12288` |
 | Post-trigger window | `post / rate` | 8.192 ms at 1 MS/s, `post = 8192` |
-| Finalise rotate | < 1 ms | off the real-time path |
-| Transfer | ≈ `2·(pre+post)` B at 0.66 MB/s | same contract as Phase 1 |
-| Trigger timeout | 1000 ms default | bounded wait |
+| Finalise rotate | ≈ 1 ms | off the real-time path |
+| Transfer | ≈ `2·samples` B at 0.66 MB/s | same contract as Phase 1 |
+| Trigger timeout | 1000 ms default | `ACQ_Task` + `HAL_GetTick`, not TIM3 |
 
 Worst-case total wait for a client that arms then polls: warm-up + (time to
 trigger) + post/rate + rotate + transfer.
@@ -274,32 +353,45 @@ trigger) + post/rate + rotate + transfer.
 
 ### 6.1 Request (backward compatible)
 
-```
+```json
 POST /api/v1/acquisition/capture
 {
   "rate_hz": 1000000,
+  "samples": 20480,                // total capture length = pre + post
   "trigger": {
     "source": "analog_watchdog",   // analog_watchdog | external | immediate
-    "level": 2048,                 // AWD: rising => value > level  (0..4095)
+    "level": 2048,                 // 0..4095
     "edge": "rising",              // rising | falling
-    "pre": 12288,
-    "post": 8192                   // total kept = pre + post
+    "pre": 12288                   // pre-trigger count; post = samples - pre
   },
   "trigger_timeout_ms": 1000
 }
 ```
 
-- `trigger` absent ⇒ **Phase 1 behaviour** (`immediate`, full buffer).
+`post` is **derived**: `post = samples - pre` (here 8192). `samples` is the total
+kept, **not** the ring size `N`.
+
+- `trigger` absent ⇒ **Phase 1 behaviour unchanged** — normal-mode DMA, full
+  buffer, `samples` used exactly as today. Existing requests are never silently
+  reinterpreted.
 - `source: "immediate"` is the explicit form of the same thing.
-- `external` adds `"pin": "PA1"` and `"edge"`.
-- Validation → `400 INVALID_VALUE`: `pre + post > capacity - ACQ_STOP_MARGIN`;
-  `level` out of range; unknown `source`; bad pin; `trigger_timeout_ms` out of
-  range.
+- `external` adds `"pin": "PA1"` (reserved, §7).
+
+Validation → `400 INVALID_VALUE`:
+
+- `pre > samples` (would make `post` negative);
+- `pre == samples` (zero post-trigger samples; not supported in 2a — a triggered
+  capture needs at least one);
+- `samples > N - ACQ_STOP_MARGIN` (the margin reserves ring capacity);
+- `samples == 0`; `level` outside `0..4095`; unknown `source`; bad `pin`;
+  `trigger_timeout_ms` outside `10..10000`.
 
 ### 6.2 Status additions
 
-`armed`, `triggered`, `trigger_source`, `trigger_index`, `pre`, `post`,
-`waited_us`, `trigger_timeouts` — alongside the existing Phase 1 fields.
+Alongside the existing Phase 1 fields: `armed`, `triggered`, `trigger_source`,
+`trigger_index`, `pre`, `post`, `waited_us`, `trigger_timeouts`, and a **fault
+reason** (present in `error` only) that distinguishes `TRIGGER_TIMEOUT` from an
+overrun/DMA fault. `DELETE` clears it and returns to `idle`.
 
 ### 6.3 State machine
 
@@ -310,7 +402,7 @@ idle ──POST(immediate)──▶ capturing ──done──▶ complete ─�
   │  POST(triggered)           │
   └──▶ armed ──AWD/edge──▶ capturing ──post done──▶ complete
         │
-        └── timeout ──▶ error ──DELETE──▶ idle
+        └── TRIGGER_TIMEOUT ──▶ error ──DELETE──▶ idle
 ```
 
 `armed` is visible in `/status` so the client can distinguish "waiting for
@@ -338,6 +430,9 @@ still moves `COMPLETE → STREAMING`.
 
 Matching the agreed sequence:
 
+- **2.0 — trigger-index probe (step 0, before the engine).** Throwaway firmware
+  that measures `Δ` between the AWD interrupt and the true trigger slot (§10.1)
+  across rates and under load. No state machine, no API. This gates 2a.
 - **2a — ring + AWD + fixed pre/post.** Circular DMA, AWD trigger, hard-coded
   `pre`/`post`, helper-timer stop, in-place rotate, same `/data`. Verify index
   accuracy, no data loss, RAM ≈ unchanged, Phase 1 still passes.
@@ -349,15 +444,30 @@ Matching the agreed sequence:
 
 ### 8.1 Test plan without lab equipment
 
-The board has no signal generator, so Phase 2 needs a repeatable source:
+The board has no signal generator, so Phase 2 needs a repeatable source. Two
+constraints shape the choice:
 
-- **AWD self-test via an internal channel.** Point the ADC at an internal,
-  near-constant channel (`Vrefint` IN17 or temperature IN16) and set the AWD
-  level just below/above its known code. That makes the trigger fire
-  deterministically every capture with **no wiring**, proving index accuracy,
-  pre/post split and timeout behaviour.
+- **`Vrefint` needs a long sample window.** Its minimum sampling time is
+  ~10 µs — an SMP window of 480 cycles at 24 MHz ADCCLK — which only fits sample
+  periods ≥ ~20.5 µs, i.e. **rate ≤ ~48 kS/s**. It is usable as the
+  *lowest-rate* point only, not across the sweep.
+- **A constant out-of-window input cannot identify the trigger slot.** If every
+  sample violates the window, the "first qualifying conversion" is unknowable
+  from the ring alone. Identifying the index needs a **unique, single crossing
+  inside the captured window**.
+
+Concrete aids:
+
+- **Software-generated step (primary).** A GPIO output (e.g. PB1) through a
+  small series resistor into PA0, with a small capacitor to ground, forms an RC
+  edge. Toggle the GPIO at a known DMA position; the edge crosses `level` once,
+  so the ring itself reveals the true trigger sample — the reference point the
+  probe needs. Low output impedance keeps the sample window short, so this works
+  at **every** rate.
+- **`Vrefint` (low-rate point only).** A no-wiring sanity check at 50 kS/s and
+  for pipeline/latency calibration, with the caveat above.
 - **PWM → RC → PA0.** A spare timer channel (e.g. PA6 = TIM3_CH1) driving an RC
-  gives a known ramp for realistic AWD/edge tests; the same pin can feed an
+  gives a periodic ramp for realistic AWD tests; the same pin can feed an
   external-trigger input for 2c.
 - **Phase 1 regression.** Re-run `tools/acq_capture.py --repeats`, `--concurrent`,
   the ownership/error suite, and the benchmark; all must match the frozen
@@ -367,18 +477,24 @@ The board has no signal generator, so Phase 2 needs a repeatable source:
 
 ## 9. Decisions recorded (approved for design; implementation still gated)
 
-1. **Trigger source for 2a** — analog watchdog. External edge stays a later
-   extension (2c).
-2. **Stop mechanism for 2a** — delayed-stop helper timer. Approval is
-   conditional on validating `ACQ_STOP_MARGIN` under worst-case interrupt
-   latency (§10.2); the hardware gate (§3.3 option 2) remains the fallback.
+1. **Trigger source for 2a** — analog watchdog, with direction encoded by the
+   window (§2.1), disarmed on first hit. External edge stays a later extension
+   (2c).
+2. **Stop mechanism for 2a** — delayed-stop helper timer, **prescaled to the
+   sample rate** (`PSC = 96e6 / rate_hz - 1`, `ARR = post - 1`), not 96 MHz
+   directly. The stop may overshoot `post` by `k + slop`; approval is
+   conditional on the margin covering that, measured under load (§10.2). The
+   hardware gate (§3.3 option 2) remains the fallback.
 3. **Default split** — `pre = N/2`, `post = N/4`. The **total capture length is
-   `pre + post`, not `N`**; `N` is only the physical ring.
-4. **`ACQ_STOP_MARGIN`** — 256 samples as an *initial* value, not a proven
-   requirement; to be validated experimentally (§10.2).
-5. **Timeout** — 1000 ms default.
-6. **`samples`** — the total requested count, `pre + post`. A request with no
-   `trigger` configuration preserves Phase 1 request behaviour exactly.
+   `samples = pre + post`, not `N`**; `N` is only the physical ring.
+4. **`ACQ_STOP_MARGIN`** — 256 samples as an *initial* value, not proven. It
+   reserves ring capacity and must be validated experimentally (§10.2).
+5. **Timeout** — 1000 ms default, detected in `ACQ_Task` via `HAL_GetTick`
+   (Phase 1 precedent). `ARMED → ERROR` with reason `TRIGGER_TIMEOUT`; `DELETE`
+   returns to `IDLE`. A 1 kHz hardware tick is not reachable from 96 MHz (§3.3).
+6. **`samples`** — the total requested count (`pre + post`); `post` is derived
+   as `samples - pre`. `pre > samples` and `pre == samples` are rejected. A
+   request with no `trigger` preserves Phase 1 request behaviour exactly.
 7. **Branching** — work on `acquisition-trigger`, based on `acq-phase1`. The
    `acq-phase2` tag is created **only after implementation and hardware
    verification**.
@@ -390,13 +506,39 @@ These are recorded, not yet implemented. The reference firmware is unchanged;
 
 ## 10. Validation items (hardware, before the design is trusted)
 
-### 10.1 Trigger sample index and the ADC/DMA pipeline
+### 10.1 Trigger sample index and the ADC/DMA pipeline (step 0)
 
-`ADC_SR.AWD` marks the condition, not the slot. The ±1-sample figure is a
-hypothesis from interrupt latency and must be **measured at several rates**
-(50 kS/s, 500 kS/s, 1 MS/s, 1.6 MS/s), because the error scales with
-`latency / sample-period`. If it proves unstable, apply the §2.4 fallbacks.
-This is the single most important thing to de-risk before writing the engine.
+`ADC_SR.AWD` marks the **condition**, not the slot. The ±1-sample figure is a
+hypothesis and must be **measured** — at several rates and under load — before
+the engine is written. This is the single highest-risk unknown in Phase 2.
+
+**Probe (throwaway, built before the state machine):**
+
+1. Choose a source that gives a **unique crossing** in the captured window
+   (§8.1): a software-generated RC step into PA0 (primary), or `Vrefint` at the
+   lowest rate only.
+2. Start circular DMA at a known rate and record the DMA write position.
+3. Arm AWD with a window whose first crossing is identifiable in the ring; for
+   a rising crossing that is `[0, level]` (§2.1).
+4. Let the first qualifying conversion raise `ADC_SR.AWD`.
+5. In the ISR, **read `NDTR` as the very first action** and record the write
+   index, the circular lap count and `ADC_SR`; then disarm the watchdog.
+6. Stop DMA after a controlled interval and compare the **observed** DMA index
+   with the **true** trigger slot found by scanning the ring for the crossing.
+
+**Method notes:**
+
+- record a **signed, modular offset** `Δ = (observed − true) mod N`, not an
+  unsigned subtraction — the AWD interrupt and the DMA write for the *same*
+  conversion may be observed in either order, and that ordering is itself the
+  quantity being measured;
+- repeat at **50 kS/s, 500 kS/s, 1 MS/s, 1.6 MS/s**, both idle and under
+  USB/lwIP load, and report the distribution of `Δ` per rate;
+- feed the measured `k` into the margin (§10.2) and, if desired, into the TIM3
+  `ARR` compensation (§3.3).
+
+If `Δ` proves unstable, apply the §2.4 fallbacks (read `NDTR` first; per-rate
+calibration; or move to the external-edge path).
 
 ### 10.2 Stop margin under worst-case interrupt latency
 
