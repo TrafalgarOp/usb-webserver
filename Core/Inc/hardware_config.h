@@ -6,7 +6,7 @@
 #define USB_WEBSERVER_HARDWARE_CONFIG_H
 
 #define ENABLE_GPIO  1
-#define ENABLE_ADC   0
+#define ENABLE_ADC   1
 #define ENABLE_PWM   0
 #define ENABLE_UART  0
 

@@ -9,10 +9,18 @@
 #include "modules/gpio.h"
 #endif
 
+#if ENABLE_ADC
+#include "modules/acquisition.h"
+#endif
+
 void Hardware_Init(void)
 {
 #if ENABLE_GPIO
     GPIO_Init();
+#endif
+
+#if ENABLE_ADC
+    ACQ_Init();
 #endif
 }
 
@@ -20,6 +28,10 @@ void Hardware_Task(void)
 {
 #if ENABLE_GPIO
     GPIO_Task();
+#endif
+
+#if ENABLE_ADC
+    ACQ_Task();
 #endif
 }
 

@@ -31,7 +31,14 @@ static GPIO_TypeDef *GPIO_GetPort(uint8_t port)
     }
 }
 
-/* Firmware-level GPIO whitelist. */
+/*
+ * Firmware-level GPIO whitelist.
+ *
+ * PA0 is deliberately excluded: it is reserved for the acquisition engine
+ * (ADC1_IN0, see modules/acquisition.c) and that module owns its
+ * configuration. The whitelist starts at PA1 so the GPIO API can never
+ * reconfigure, drive or read the ADC input.
+ */
 uint8_t GPIO_IsPinAllowed(uint8_t port, uint8_t pin)
 {
     if (pin > 15)

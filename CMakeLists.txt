@@ -57,6 +57,8 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/api_benchmark.c
         Core/Inc/modules/gpio.h
         Core/Src/modules/gpio.c
+        Core/Inc/modules/acquisition.h
+        Core/Src/modules/acquisition.c
         Core/Inc/hardware_config.h)
 
 # Add STM32CubeMX generated sources
