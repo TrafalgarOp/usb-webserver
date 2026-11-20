@@ -18,6 +18,13 @@
             }
         },
         {
+            "name": "DebugITM",
+            "inherits": "Debug",
+            "cacheVariables": {
+                "USB_WS_ENABLE_ITM_LOG": "ON"
+            }
+        },
+        {
             "name": "Release",
             "inherits": "default",
             "cacheVariables": {
@@ -29,6 +36,10 @@
         {
             "name": "Debug",
             "configurePreset": "Debug"
+        },
+        {
+            "name": "DebugITM",
+            "configurePreset": "DebugITM"
         },
         {
             "name": "Release",

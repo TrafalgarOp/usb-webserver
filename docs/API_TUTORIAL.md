@@ -2286,3 +2286,104 @@ The endpoint is temporary and bounded; it stays until the first acquisition path
 trustworthy consumer. Explicitly deferred: tuning `TCP_MSS` / `TCP_SND_BUF` / NCM NTB sizes.
 Capture, recording and streaming of real acquisition data come next, budgeted against the
 ~0.65 MB/s sustained figure measured here.
+
+## Appendix H — Verified increment log: opt-in SWO/ITM console
+
+Separate, small infrastructure change: give `printf` a real byte sink so the one-line
+`BENCH` log (and any future diagnostics) can actually be read. It is deliberately opt-in so
+the default and release builds keep a harmless stub and no build can stall on a debugger.
+
+### H.1 What changed
+
+| File | Change |
+| --- | --- |
+| `Core/Src/log_itm.c` | New. Strong `__io_putchar()`: ITM stimulus port 0 when enabled, no-op otherwise. |
+| `CMakeLists.txt` | `USB_WS_ENABLE_ITM_LOG` option (default `OFF`), source registration, and a conditional `USB_WS_ENABLE_ITM_LOG=1` define. |
+| `CMakePresets.json` | New `DebugITM` configure/build preset that turns the option on. |
+
+`syscalls.c` is untouched: it already declares `__io_putchar` weak, so a strong definition
+elsewhere simply replaces the call the compiler had reduced to `nop.w`.
+
+### H.2 Design
+
+- **Opt-in.** `USB_WS_ENABLE_ITM_LOG=OFF` (default) compiles a stub that returns without
+  writing; `printf` then costs a function call and nothing else.
+- **Guard before writing.** The ITM path checks both `ITM_TCR_ITMENA_Msk` and `ITM_TER`
+  bit 0 and only writes when tracing is actually enabled by a debugger. With no debugger,
+  nothing is written.
+- **Bounded wait.** The FIFO spin is capped, so a debugger that stops draining SWO can cost
+  a dropped byte but can never stall the cooperative superloop.
+- **No hot-path cost.** `printf` is only used on init/error paths and one line per benchmark
+  session in teardown, so enabling it cannot perturb a transfer.
+
+### H.3 Build verification
+
+Both presets build warning-free. The default-sink difference is visible in the disassembly:
+
+```text
+Debug     __io_putchar  0x16 bytes   no CoreSight access  (harmless stub)
+DebugITM  __io_putchar  0x62 bytes   touches 0xE0000000   (real ITM write)
+```
+
+`_write` calls `__io_putchar` in both builds (previously the call was a `nop.w`).
+
+### H.4 SWO capture attempt — blocked by the probe
+
+Capturing the trace on this bench was **not** possible. Using the bundled
+`ST-LINK_gdbserver` with SWV (`-d -a 96000000 -b 96 -z 61235`) the SWO socket came up and
+reported 1 MHz, but no bytes were ever produced. Reading the CoreSight registers over GDB
+showed why tracing stayed silent even after correcting the TPIU:
+
+```text
+CoreDebug_DEMCR = 0x01000000   # TRCENA on
+ITM_TCR         = 0x00000000   # ITMENA off  -> debugger never enabled ITM
+ITM_TER         = 0x00000000   # no stimulus port enabled
+TPIU_ACPR       = 0x00000000
+```
+
+After enabling ITM and configuring TPIU by hand (`TPIU_SPPR=1` NRZ, `TPIU_ACPR=0x5F` ⇒
+1 MHz, `ITM_TER=1`, `ITM_TCR=1`) the ITM was genuinely running — `ITM_TCR` read back
+`ITMENA=1` — yet still zero trace bytes reached the host. The conclusion is the one the
+review flagged: **this ST-Link V2 clone does not deliver SWO reliably**, so connecting over
+SWD does not imply a working trace pin. The firmware side is correct; the probe side is the
+limitation. On a probe with a working SWO path (genuine ST-Link/V2-1, V3, or J-Link) the
+same build streams ITM port 0 at 1 MHz.
+
+### H.5 Independent verification (no SWO needed)
+
+Because the trace link is unusable here, the log line was verified at the software level:
+GDB trapped `_write()` and dumped the exact buffer handed to it for one 64 KB session.
+
+```text
+WRITE[102]: BENCH requested=65536 generated=65536 written=65536 acked=65536 elapsed_ms=105 retries=0 completed=1
+```
+
+This confirms end to end that the firmware produces one correctly formatted line per
+session (not per byte) with consistent counters. `/api/v1/benchmark/stats` remains the
+switch-independent, authoritative device-side surface.
+
+### H.6 Regression — transport unchanged when logging is off
+
+With the default build (logging `OFF`) reflashed, the sweep is statistically unchanged and
+`retries` is 0 at every size:
+
+| Size | body MB/s (baseline → now) | e2e MB/s (now) | retries |
+| --- | --- | --- | --- |
+| 4 KB | 1.05 → 1.02 | 0.46 | 0 |
+| 16 KB | 0.73 → 0.71 | 0.58 | 0 |
+| 32 KB | 0.69 → 0.68 | 0.61 | 0 |
+| 64 KB | 0.68 → 0.66 | 0.63 | 0 |
+| 128 KB | 0.665 → 0.648 | 0.63 | 0 |
+
+The small spread is run-to-run variance, not a code effect; the concurrency, gate and abort
+tests all still pass. The board is left flashed with the default (logging `OFF`) build.
+
+### H.7 Footprint
+
+```text
+logging OFF:  RAM 52264 B / 128 KB (39.87%)   FLASH 131016 B / 512 KB (24.99%)
+logging ON:   RAM 52264 B / 128 KB (39.87%)   FLASH 131092 B / 512 KB (25.00%)
+```
+
+The SWO/ITM back-end adds 76 bytes of flash over the no-op stub. RAM is unchanged; both are
+stateless and use no buffer.

@@ -28,6 +28,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
+# Opt-in SWO/ITM console for printf (Core/Src/log_itm.c). OFF keeps a harmless
+# no-op byte sink so firmware can never block on a debugger. See Core/Src/log_itm.c.
+option(USB_WS_ENABLE_ITM_LOG "Route printf to the SWO/ITM stimulus port 0" OFF)
+if(USB_WS_ENABLE_ITM_LOG)
+    message("ITM logging: ON (printf -> SWO stimulus port 0)")
+else()
+    message("ITM logging: OFF (printf is a no-op)")
+endif()
+
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
@@ -35,6 +44,7 @@ enable_language(C ASM)
 add_executable(${CMAKE_PROJECT_NAME}
         Core/Inc/hardware.h
         Core/Src/hardware.c
+        Core/Src/log_itm.c
         Core/Inc/api.h
         Core/Src/api.c
         Core/Inc/api_server.h
@@ -72,6 +82,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
+        $<$<BOOL:${USB_WS_ENABLE_ITM_LOG}>:USB_WS_ENABLE_ITM_LOG=1>
 )
 
 # Remove wrong libob.a library dependency when using cpp files
