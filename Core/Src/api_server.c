@@ -36,6 +36,7 @@
 #include "api_benchmark.h"
 #include "api_router.h"
 #include "api_server.h"
+#include "modules/acquisition.h"
 
 #define API_PORT                 8080
 #define API_MAX_CONNS            2
@@ -102,7 +103,9 @@ typedef struct
     uint32_t stream_generated;  /* bytes staged into body (may exceed written) */
     uint16_t stream_retries;    /* sends that found no room or returned ERR_MEM */
     uint32_t stream_start_ms;   /* sys_now() when the stream began */
+    const uint8_t *stream_ptr;  /* buffer source, or NULL for the generated pattern */
     uint8_t  bench_owned;       /* 1 while this slot holds the session gate */
+    uint8_t  acq_owned;         /* 1 while this slot holds an acquisition view */
 } api_conn_t;
 
 static api_conn_t api_conns[API_MAX_CONNS];
@@ -131,6 +134,10 @@ static const char BODY_TOO_LARGE[] =
 static const char BODY_BENCH_BUSY[] =
     "{\"success\":false,\"error\":{"
     "\"code\":\"BENCHMARK_BUSY\",\"message\":\"A benchmark session is already running.\"}}";
+
+static const char BODY_STREAM_BUSY[] =
+    "{\"success\":false,\"error\":{"
+    "\"code\":\"STREAM_BUSY\",\"message\":\"Another bulk transfer is in progress.\"}}";
 
 static const char BODY_INTERNAL[] =
     "{\"success\":false,\"error\":{"
@@ -185,9 +192,25 @@ static void bench_finalize(api_conn_t *c)
     c->bench_owned = 0;
 }
 
+/* Release an acquisition view if this slot holds one. Like bench_finalize this
+ * runs from conn_reset(), so normal completion, client FIN/RST, send timeout
+ * and explicit abort all hand the buffer back exactly once. */
+static void acq_finalize(api_conn_t *c)
+{
+    if (!c->acq_owned)
+    {
+        return;
+    }
+
+    ACQ_EndRead();
+    API_Bench_Release();   /* the shared bulk-stream gate */
+    c->acq_owned = 0;
+}
+
 static void conn_reset(api_conn_t *c)
 {
     bench_finalize(c);
+    acq_finalize(c);
 
     c->pcb = NULL;
     c->state = API_CONN_IDLE;
@@ -209,6 +232,7 @@ static void conn_reset(api_conn_t *c)
     c->stream_generated = 0;
     c->stream_retries = 0;
     c->stream_start_ms = 0;
+    c->stream_ptr = NULL;
 }
 
 /*
@@ -385,6 +409,28 @@ static err_t conn_try_stream(api_conn_t *c)
         {
             uint32_t remaining = c->stream_total - c->stream_written;
             uint16_t chunk = (remaining < room) ? (uint16_t)remaining : room;
+
+            /* Direct buffer source (acquisition): stream straight from the
+             * owning module's RAM. No staging copy and no pattern alignment. */
+            if (c->stream_ptr != NULL)
+            {
+                err_t err = tcp_write(c->pcb,
+                                      c->stream_ptr + c->stream_written, chunk,
+                                      TCP_WRITE_FLAG_COPY);
+
+                if (err == ERR_MEM)
+                {
+                    c->stream_retries++;
+                    return ERR_MEM;
+                }
+                if (err != ERR_OK)
+                {
+                    return err;
+                }
+
+                c->stream_written += chunk;
+                continue;
+            }
 
             if (chunk > (uint16_t)sizeof c->body)
             {
@@ -684,8 +730,54 @@ static err_t conn_begin_stream(api_conn_t *c, uint32_t total,
     }
 }
 
+/*
+ * Buffer-backed stream (acquisition data). The router has already verified a
+ * completed capture exists and set the Content-Length; here the transport takes
+ * the shared bulk gate, pins the buffer (COMPLETE->STREAMING) and streams it
+ * directly. HEAD sends only the header and touches neither the gate nor the
+ * buffer.
+ */
+static err_t api_start_acq_stream(api_conn_t *c, const API_Route_t *meta)
+{
+    const uint16_t *samples = NULL;
+    uint32_t count = 0;
+
+    if (c->head_only)
+    {
+        return conn_begin_stream(c, meta->stream_bytes, meta->content_type);
+    }
+
+    if (!API_Bench_Acquire())
+    {
+        return conn_respond(c, 409, "Conflict", NULL,
+                            BODY_STREAM_BUSY, BODY_LEN(BODY_STREAM_BUSY));
+    }
+
+    if (!ACQ_BeginRead(&samples, &count) || count == 0)
+    {
+        API_Bench_Release();
+        return conn_respond(c, 409, "Conflict", NULL,
+                            BODY_STREAM_BUSY, BODY_LEN(BODY_STREAM_BUSY));
+    }
+
+    c->acq_owned = 1;
+    c->stream_ptr = (const uint8_t *)samples;
+    c->stream_total = count * ACQ_SAMPLE_BYTES;
+    c->stream_written = 0;
+    c->stream_generated = 0;
+    c->stream_retries = 0;
+    c->stream_start_ms = sys_now();
+
+    return conn_begin_stream(c, c->stream_total, meta->content_type);
+}
+
 static err_t api_start_stream(api_conn_t *c, const API_Route_t *meta)
 {
+    if (meta->stream_src == API_STREAM_BUFFER)
+    {
+        return api_start_acq_stream(c, meta);
+    }
+
     if (c->head_only)
     {
         return conn_begin_stream(c, meta->stream_bytes, meta->content_type);
