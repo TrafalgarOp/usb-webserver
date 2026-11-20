@@ -93,6 +93,40 @@ reservation so the GPIO API cannot grab it) and one TIM2 channel.
   routable to TIM2 input capture on this package; would need TIM1/8 break or
   EXTI. Revisit only if AWD proves too coarse.
 
+### 2.4 Deriving the trigger sample index (hypothesis, to be verified)
+
+`ADC_SR.AWD` marks when the watchdog **condition** was met, not which ring slot
+holds the offending sample. The index has to be reconstructed from the DMA
+write pointer, which trails the analog event through a short pipeline:
+
+```text
+analog sample ──▶ SAR conversion ──▶ DR write ──▶ DMA transfer ──▶ NDTR--
+                    (Tconv)            (~ns AHB)     (~ns)
+```
+
+At the AWD interrupt, `w = N - NDTR` names the *last sample the DMA has finished
+writing*. If further conversions completed before the ISR ran, `w` is already
+one or more samples past the offending one:
+
+```text
+i_trig = w - k       k = samples completed between the AWD event and the read
+```
+
+`k` is expected to be 0 or 1 at 1 MS/s but is **not proven**. Therefore:
+
+- the "±1 sample" figure is a hypothesis, not a specification;
+- it must be **measured at several rates** — 50 kS/s, 500 kS/s, 1 MS/s,
+  1.6 MS/s — because `k` scales with `latency / sample-period` and the period
+  shrinks as the rate rises;
+- if `k` is unstable, options are (a) read `NDTR` as the very first action of
+  the ISR, before any other work; (b) subtract a calibrated constant that may be
+  rate-dependent; or (c) timestamp with a second channel (external edge, §2.2),
+  which removes the CPU from the path entirely.
+
+The §8.1 self-test is what makes this measurable: with a known input the
+captured window can be checked against the expected location of the trigger
+sample, at each rate.
+
 ---
 
 ## 3. Ring architecture
@@ -131,9 +165,12 @@ during warm-up are ignored.
 
 ### 3.2 Trigger position is configurable
 
-`pre` and `post` are request parameters. Requested `samples` becomes an alias
-for `pre + post` (total kept). Typical presets: `pre = N/2, post = N/4` (centre
-trigger), `pre = 0` (post only), `pre = 3N/4` (deep pre-trigger).
+`pre` and `post` are request parameters. Requested `samples` is the **total
+requested count, `pre + post`**. Note this is deliberately *not* the ring size
+`N`: `N = ACQ_MAX_SAMPLES` is only the physical ring, while the capture length
+is `pre + post`, constrained by `pre + post <= N - ACQ_STOP_MARGIN`. Typical
+presets: `pre = N/2, post = N/4` (centre trigger), `pre = 0` (post only),
+`pre = 3N/4` (deep pre-trigger).
 
 ### 3.3 Stopping after `post` samples
 
@@ -218,7 +255,7 @@ their own decisions, not Phase 2.
 | Quantity | Value | Notes |
 |----------|-------|-------|
 | Rate range | 50 kS/s – 1.6 MS/s | unchanged from Phase 1 |
-| AWD index error | ±1 sample | ADC flag + IRQ latency 0.13–0.21 µs vs 0.625 µs period |
+| AWD index error | **±1 sample (hypothesis)** | §2.4: ADC flag + IRQ latency; must be measured per rate, not assumed |
 | External-edge index error | ±1 sample | hardware latch, load-independent |
 | Stop slop (helper timer) | ±1–2 samples | absorbed by `ACQ_STOP_MARGIN` |
 | Warm-up before accept | `pre` samples | e.g. 12.3 ms at 1 MS/s, `pre = 12288` |
@@ -328,16 +365,52 @@ The board has no signal generator, so Phase 2 needs a repeatable source:
 
 ---
 
-## 9. Decisions requested before implementation
+## 9. Decisions recorded (approved for design; implementation still gated)
 
-1. **Trigger source for 2a** — analog watchdog (recommended) / external edge /
-   both.
-2. **Stop mechanism for 2a** — delayed-stop helper timer (recommended) /
-   hardware gate.
-3. **Default split** — `pre = N/2`, `post = N/4` (recommended) or another.
-4. **`ACQ_STOP_MARGIN`** — 256 samples (recommended).
-5. **Trigger timeout default** — 1000 ms (recommended).
-6. **`samples` semantics** — alias of `pre + post` (recommended) / keep as
-   capacity.
-7. **Freeze tag** — branch `acquisition-trigger` off `acq-phase1`; tag the result
-   `acq-phase2` on success.
+1. **Trigger source for 2a** — analog watchdog. External edge stays a later
+   extension (2c).
+2. **Stop mechanism for 2a** — delayed-stop helper timer. Approval is
+   conditional on validating `ACQ_STOP_MARGIN` under worst-case interrupt
+   latency (§10.2); the hardware gate (§3.3 option 2) remains the fallback.
+3. **Default split** — `pre = N/2`, `post = N/4`. The **total capture length is
+   `pre + post`, not `N`**; `N` is only the physical ring.
+4. **`ACQ_STOP_MARGIN`** — 256 samples as an *initial* value, not a proven
+   requirement; to be validated experimentally (§10.2).
+5. **Timeout** — 1000 ms default.
+6. **`samples`** — the total requested count, `pre + post`. A request with no
+   `trigger` configuration preserves Phase 1 request behaviour exactly.
+7. **Branching** — work on `acquisition-trigger`, based on `acq-phase1`. The
+   `acq-phase2` tag is created **only after implementation and hardware
+   verification**.
+
+These are recorded, not yet implemented. The reference firmware is unchanged;
+§10 lists what must be settled on hardware before the design can be trusted.
+
+---
+
+## 10. Validation items (hardware, before the design is trusted)
+
+### 10.1 Trigger sample index and the ADC/DMA pipeline
+
+`ADC_SR.AWD` marks the condition, not the slot. The ±1-sample figure is a
+hypothesis from interrupt latency and must be **measured at several rates**
+(50 kS/s, 500 kS/s, 1 MS/s, 1.6 MS/s), because the error scales with
+`latency / sample-period`. If it proves unstable, apply the §2.4 fallbacks.
+This is the single most important thing to de-risk before writing the engine.
+
+### 10.2 Stop margin under worst-case interrupt latency
+
+`ACQ_STOP_MARGIN = 256` is a starting value. It must be shown to hold when the
+stop interrupt is delayed by concurrent USB/lwIP activity — i.e. the worst-case
+stop slop, in samples, must stay below the margin so the pre-trigger window is
+never overwritten. Measure **under load**, not on an idle bus.
+
+### 10.3 Circular DMA vs `DDS`
+
+In circular mode there is no "last transfer", so Phase 1's `DDS=1` rationale
+does not carry over unchanged. Verify request generation holds across laps.
+
+### 10.4 Phase 1 regression
+
+`tools/acq_capture.py --repeats`, `--concurrent`, the ownership/error suite and
+the benchmark must all still match the frozen `acq-phase1` numbers.
